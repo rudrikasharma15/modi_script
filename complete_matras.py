@@ -1,640 +1,272 @@
 #!/usr/bin/env python3
 """
-Enhanced ResNet152-UNet for Modi Script Matra Segmentation
-Improved for non-straight scripts with advanced preprocessing and post-processing
-0 = background, 1 = top matra, 2 = inline matra, 3 = bottom matra
+autolabel_matra_folders.py
+Generate YOLO labels for Modi script matras using folder names.
+
+Usage:
+    python autolabel_matra_folders.py --data_root "/Users/applemaair/Downloads/Dataset_Modi/Dataset_Modi" --out datasets/modi
 """
 import os
-import random
-from pathlib import Path
 import argparse
-import numpy as np
-from PIL import Image
+from pathlib import Path
 import cv2
+import numpy as np
 from tqdm import tqdm
-from scipy import ndimage
-from skimage import morphology, measure
+import json
 
-import torch
-import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
-import torchvision.transforms as T
-from torchvision import models
-from torch.cuda.amp import autocast, GradScaler
-from torch.optim import AdamW
-from torch.optim.lr_scheduler import CosineAnnealingLR
+# Matra mapping based on Modi script vowel signs
+MATRA_RULES = {
+    # Top matras (appear above base character)
+    'i': 'top_matra',      # ि
+    'e': 'top_matra',      # े  
+    'ai': 'top_matra',     # ै
+    
+    # Side matras (appear to right/inline)
+    'aa': 'side_matra',    # ा
+    'o': 'side_matra',     # ो
+    'au': 'side_matra',    # ौ
+    
+    # Bottom matras (appear below base character)
+    'u': 'bottom_matra',   # ु
+    
+    # Anusvara/Visarga (often top, but sometimes separate)
+    'nm': 'top_matra',     # ं (anusvara - appears above)
+    'ahaa': 'side_matra',  # ः (visarga - appears to side)
+    'aha': 'side_matra',
+    'am': 'top_matra',
+    'ah': 'side_matra',
+}
 
-# ================ UTILITIES ================
-def set_seed(seed=42):
-    random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)
-    if torch.cuda.is_available():
-        torch.cuda.manual_seed_all(seed)
+# Class to index mapping
+CLASS_TO_IDX = {
+    'top_matra': 0,
+    'side_matra': 1,
+    'bottom_matra': 2
+}
 
-def ensure_dir(p):
-    Path(p).mkdir(parents=True, exist_ok=True)
-
-# ================ ADVANCED PREPROCESSING ================
-def adaptive_binarization(gray):
-    """Better binarization for non-straight scripts"""
-    # Adaptive thresholding
-    binary1 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
-                                     cv2.THRESH_BINARY_INV, 21, 10)
-    
-    # Otsu's thresholding
-    blur = cv2.GaussianBlur(gray, (5,5), 0)
-    _, binary2 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    
-    # Combine both methods
-    binary = cv2.bitwise_or(binary1, binary2)
-    
-    # Clean noise
-    kernel = np.ones((2,2), np.uint8)
-    binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
-    
-    return binary
-
-def detect_baseline_advanced(binary, orig_gray):
-    """Advanced baseline detection for curved/non-straight Modi scripts"""
-    h, w = binary.shape
-    
-    # Method 1: Horizontal projection with smoothing
-    proj = np.sum(binary, axis=1)
-    proj_smooth = ndimage.gaussian_filter1d(proj, sigma=h//30)
-    
-    # Find peaks in projection (body region)
-    from scipy.signal import find_peaks
-    peaks, properties = find_peaks(proj_smooth, height=w*0.15, distance=h//10)
-    
-    if len(peaks) > 0:
-        # Main body is around highest peak
-        main_peak = peaks[np.argmax(proj_smooth[peaks])]
-        body_center = main_peak
-    else:
-        body_center = h // 2
-    
-    # Method 2: Find horizontal strokes (potential baseline indicators)
-    horiz_kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (w//6, 3))
-    horiz_lines = cv2.morphologyEx(binary, cv2.MORPH_OPEN, horiz_kernel)
-    
-    # Get connected components of horizontal lines
-    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(horiz_lines, connectivity=8)
-    
-    baseline_candidates = []
-    for i in range(1, num_labels):
-        x, y, width, height, area = stats[i]
-        if width > w * 0.25 and height < h * 0.15:
-            cy = int(centroids[i][1])
-            baseline_candidates.append(cy)
-    
-    # Method 3: Skeleton-based centerline detection
-    skeleton = morphology.skeletonize(binary > 0)
-    skel_proj = np.sum(skeleton, axis=1)
-    skel_smooth = ndimage.gaussian_filter1d(skel_proj, sigma=h//25)
-    
-    # Combine all methods
-    if baseline_candidates:
-        baseline_y = int(np.median(baseline_candidates))
-    else:
-        baseline_y = body_center
-    
-    # Define body band with adaptive width
-    band_width = max(int(h * 0.12), 15)
-    body_top = max(0, baseline_y - band_width)
-    body_bottom = min(h - 1, baseline_y + band_width)
-    
-    return body_top, body_bottom, baseline_y
-
-def classify_component_by_position(component_mask, body_top, body_bottom, baseline_y, h, w):
+def parse_folder_name(folder_name):
     """
-    Classify a component based on its position and shape
-    Returns: 1 (top), 2 (inline), or 3 (bottom)
+    Extract matra type from folder name.
+    Examples:
+        '13 KI-kiran' -> 'i' -> 'top_matra'
+        '14 KU-kunfu' -> 'u' -> 'bottom_matra'
+        '15 KE-kedar' -> 'e' -> 'top_matra'
     """
-    # Get component properties
-    ys, xs = np.where(component_mask)
+    # Remove leading numbers and split
+    parts = folder_name.split()
+    if len(parts) < 2:
+        return None
     
-    if len(ys) == 0:
-        return 0
+    # Get the character part (e.g., "KI-kiran")
+    char_part = parts[1].split('-')[0].upper()
     
-    cy = np.mean(ys)
-    y_min, y_max = ys.min(), ys.max()
-    x_min, x_max = xs.min(), xs.max()
+    # Extract matra from character combination
+    # Base consonants in Modi: KA, KHA, GA, etc.
+    base_consonants = ['K', 'KH', 'G', 'GH', 'CH', 'CHH', 'J', 'Z', 
+                       'TR', 'TT', 'D', 'DH', 'DHH', 'N', 'T', 'TH', 'THH',
+                       'B', 'BH', 'M', 'Y', 'R', 'L', 'V', 'SH', 'S', 'H',
+                       'P', 'PH', 'AL', 'KSH', 'DNY', 'DNYA']
     
-    comp_height = y_max - y_min + 1
-    comp_width = x_max - x_min + 1
+    # Find base consonant
+    base = None
+    for cons in sorted(base_consonants, key=len, reverse=True):
+        if char_part.startswith(cons):
+            base = cons
+            break
     
-    # Calculate overlap with body region
-    body_overlap_pixels = np.sum((ys >= body_top) & (ys <= body_bottom))
-    total_pixels = len(ys)
-    overlap_ratio = body_overlap_pixels / total_pixels if total_pixels > 0 else 0
+    if not base:
+        # Check for standalone vowels (no matra needed)
+        vowels = ['A', 'AA', 'I', 'U', 'E', 'AI', 'O', 'AU']
+        if char_part in vowels or any(char_part.startswith(v) for v in vowels):
+            return None
+        base = char_part[0]  # Fallback
     
-    # Aspect ratio and shape features
-    aspect_ratio = comp_width / (comp_height + 1e-6)
+    # Extract matra part
+    matra_part = char_part[len(base):].lower()
     
-    # Multi-factor classification
+    if not matra_part or matra_part == 'a':
+        return None  # No matra (inherent 'a')
     
-    # Strong overlap with body = inline
-    if overlap_ratio > 0.5:
-        return 2
-    
-    # Component mostly above body
-    if y_max < body_top - h*0.03:
-        return 1
-    
-    # Component mostly below body
-    if y_min > body_bottom + h*0.03:
-        return 3
-    
-    # Center-based classification with margin
-    margin = h * 0.08
-    
-    if cy < body_top - margin:
-        return 1
-    elif cy > body_bottom + margin:
-        return 3
-    else:
-        # Ambiguous region - use additional features
-        
-        # Horizontal strokes above baseline likely top matras
-        if aspect_ratio > 2.5 and cy < baseline_y - margin/2:
-            return 1
-        
-        # Curved components below baseline likely bottom matras
-        if aspect_ratio < 1.5 and cy > baseline_y + margin/2:
-            return 3
-        
-        return 2
+    # Map to matra type
+    return MATRA_RULES.get(matra_part)
 
-# ================ ENHANCED AUTO-LABELER ================
-def generate_4class_mask_enhanced(gray):
-    """Enhanced auto-labeler with better handling of Modi script characteristics"""
-    if len(gray.shape) == 3:
-        gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
+def get_smart_bbox(img, matra_type):
+    """
+    Generate bounding box based on matra type and image analysis.
+    Uses adaptive approach based on typical Modi matra positions.
+    """
+    h, w = img.shape[:2]
     
-    h, w = gray.shape
+    # Simple binarization to find content bounds
+    gray = img if len(img.shape) == 2 else cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     
-    # 1) Advanced binarization
-    binary = adaptive_binarization(gray)
+    # Find content bounds
+    coords = cv2.findNonZero(binary)
+    if coords is None:
+        # Fallback: center box
+        return [0.5, 0.5, 0.6, 0.6]
     
-    # 2) Advanced baseline detection
-    body_top, body_bottom, baseline_y = detect_baseline_advanced(binary, gray)
+    x, y, ww, hh = cv2.boundingRect(coords)
     
-    # 3) Connected component analysis with size filtering
-    # Remove very small noise
-    cleaned = morphology.remove_small_objects(binary > 0, min_size=max(6, h*w//5000))
-    cleaned = (cleaned * 255).astype(np.uint8)
+    # Calculate normalized values
+    cx_full = (x + ww/2) / w
+    cy_full = (y + hh/2) / h
+    nw_full = ww / w
+    nh_full = hh / h
     
-    # Get connected components
-    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(cleaned, connectivity=8)
+    # Adjust based on matra type
+    if matra_type == 'top_matra':
+        # Focus on top portion
+        cy = (y + hh * 0.25) / h  # Top quarter
+        nh = (hh * 0.4) / h  # Upper 40%
+        return [cx_full, cy, nw_full * 0.8, nh]
     
-    # 4) Classify each component
-    output_mask = np.zeros((h, w), dtype=np.uint8)
+    elif matra_type == 'bottom_matra':
+        # Focus on bottom portion
+        cy = (y + hh * 0.75) / h  # Bottom quarter
+        nh = (hh * 0.4) / h  # Lower 40%
+        return [cx_full, cy, nw_full * 0.8, nh]
     
-    for i in range(1, num_labels):
-        x, y, width, height, area = stats[i]
-        
-        # Skip very small components
-        if area < max(6, h*w//8000):
-            continue
-        
-        # Get component mask
-        comp_mask = (labels == i)
-        
-        # Classify component
-        cls = classify_component_by_position(comp_mask, body_top, body_bottom, 
-                                             baseline_y, h, w)
-        
-        output_mask[comp_mask] = cls
+    elif matra_type == 'side_matra':
+        # Focus on right side or middle-right
+        cx = (x + ww * 0.65) / w  # Right-biased
+        return [cx, cy_full, nw_full * 0.5, nh_full * 0.8]
     
-    # 5) Post-processing: merge nearby components of same class
-    for cls in [1, 2, 3]:
-        cls_mask = (output_mask == cls).astype(np.uint8)
-        if cls_mask.sum() == 0:
-            continue
-        
-        # Slight dilation to connect nearby parts
-        kernel_size = max(2, min(5, int(h * 0.02)))
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (kernel_size, kernel_size))
-        dilated = cv2.dilate(cls_mask, kernel, iterations=1)
-        
-        # Re-label and filter
-        dilated = morphology.remove_small_objects(dilated > 0, min_size=max(4, h*w//10000))
-        output_mask[dilated & (output_mask == 0)] = cls
-    
-    return output_mask
+    # Default: return full content box
+    return [cx_full, cy_full, nw_full, nh_full]
 
-# ================ STRICT POST-CLASSIFIER ================
-def classify_components_strict(mask_bin, orig_gray):
-    """Strict post-classification for predicted masks"""
-    if mask_bin.dtype != np.uint8:
-        mb = (mask_bin > 0).astype(np.uint8) * 255
-    else:
-        mb = mask_bin.copy()
+def process_folder(folder_path, out_img_dir, out_label_dir):
+    """Process all images in a folder."""
+    folder_name = folder_path.name
+    matra_type = parse_folder_name(folder_name)
     
-    h, w = mb.shape
+    if matra_type is None:
+        return 0, 0  # Skip folders without matras
     
-    # Use enhanced detection
-    binary = adaptive_binarization(orig_gray)
-    body_top, body_bottom, baseline_y = detect_baseline_advanced(binary, orig_gray)
+    class_idx = CLASS_TO_IDX[matra_type]
     
-    # Classify components in predicted mask
-    class_mask = np.zeros((h, w), dtype=np.uint8)
-    num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(mb, connectivity=8)
+    # Find all images
+    img_extensions = {'.png', '.jpg', '.jpeg', '.bmp', '.tif', '.tiff'}
+    images = [f for f in folder_path.iterdir() 
+              if f.is_file() and f.suffix.lower() in img_extensions]
     
-    for i in range(1, num_labels):
-        x, y, width, height, area = stats[i]
-        
-        if area < 6:
-            continue
-        
-        comp_mask = (labels == i)
-        cls = classify_component_by_position(comp_mask, body_top, body_bottom, 
-                                             baseline_y, h, w)
-        
-        class_mask[comp_mask] = cls
-    
-    return class_mask
-
-def save_overlay_colored(pil_gray, class_mask, out_path):
-    """Save colored overlay visualization"""
-    rgb = np.array(pil_gray.convert("RGB"))
-    h, w = rgb.shape[:2]
-    mask_resized = cv2.resize(class_mask.astype(np.uint8), (w, h), 
-                              interpolation=cv2.INTER_NEAREST)
-    
-    overlay = rgb.copy()
-    # Red for top matras
-    overlay[mask_resized == 1] = [255, 0, 0]
-    # Green for inline matras
-    overlay[mask_resized == 2] = [0, 255, 0]
-    # Blue for bottom matras
-    overlay[mask_resized == 3] = [0, 0, 255]
-    
-    blended = cv2.addWeighted(overlay, 0.6, rgb, 0.4, 0)
-    Image.fromarray(blended).save(out_path)
-
-# ================ DATASET ================
-class Modi4ClsDataset(Dataset):
-    def __init__(self, paths, img_size=384, transforms=None, debug_dir=None):
-        self.paths = paths
-        self.img_size = img_size
-        self.transforms = transforms
-        self.debug_dir = debug_dir
-        if debug_dir:
-            ensure_dir(debug_dir)
-
-    def __len__(self):
-        return len(self.paths)
-
-    def __getitem__(self, idx):
-        p = self.paths[idx]
-        pil = Image.open(p).convert("L")
-        pil_r = pil.resize((self.img_size, self.img_size), Image.BILINEAR)
-        arr = np.array(pil_r)
-        
-        # Use enhanced auto-labeler
-        mask = generate_4class_mask_enhanced(arr)
-        
-        # Debug visualization
-        if self.debug_dir and (idx % 100 == 0):
-            outp = Path(self.debug_dir) / f"{Path(p).stem}_labelgen.png"
-            save_overlay_colored(pil_r, mask, outp)
-        
-        img = pil_r.convert("RGB")
-        if self.transforms:
-            img = self.transforms(img)
-        else:
-            tf = T.Compose([
-                T.ToTensor(),
-                T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-            ])
-            img = tf(img)
-        
-        mask_t = torch.from_numpy(mask.astype(np.int64))
-        return img, mask_t, p
-
-# ================ MODEL ================
-class ResNet152_UNet_Multi(nn.Module):
-    def __init__(self, pretrained=True, num_classes=4):
-        super().__init__()
-        resnet = models.resnet152(
-            weights=models.ResNet152_Weights.DEFAULT if pretrained else None
-        )
-        
-        self.conv1 = nn.Sequential(resnet.conv1, resnet.bn1, resnet.relu)
-        self.maxpool = resnet.maxpool
-        self.layer1 = resnet.layer1
-        self.layer2 = resnet.layer2
-        self.layer3 = resnet.layer3
-        self.layer4 = resnet.layer4
-
-        def upc(a, b):
-            return nn.ConvTranspose2d(a, b, 2, 2)
-        
-        def block(a, b):
-            return nn.Sequential(
-                nn.Conv2d(a, b, 3, padding=1, bias=False),
-                nn.BatchNorm2d(b),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(b, b, 3, padding=1, bias=False),
-                nn.BatchNorm2d(b),
-                nn.ReLU(inplace=True),
-            )
-        
-        self.up4 = upc(2048, 1024)
-        self.dec4 = block(2048, 1024)
-        self.up3 = upc(1024, 512)
-        self.dec3 = block(1024, 512)
-        self.up2 = upc(512, 256)
-        self.dec2 = block(512, 256)
-        self.up1 = upc(256, 64)
-        self.dec1 = block(128, 64)
-        self.final_up = upc(64, 64)
-        self.final = nn.Conv2d(64, num_classes, 1)
-
-    def forward(self, x):
-        x0 = self.conv1(x)
-        x1 = self.layer1(self.maxpool(x0))
-        x2 = self.layer2(x1)
-        x3 = self.layer3(x2)
-        x4 = self.layer4(x3)
-        
-        d4 = self.dec4(torch.cat([self.up4(x4), x3], dim=1))
-        d3 = self.dec3(torch.cat([self.up3(d4), x2], dim=1))
-        d2 = self.dec2(torch.cat([self.up2(d3), x1], dim=1))
-        d1 = self.dec1(torch.cat([self.up1(d2), x0], dim=1))
-        out = self.final(self.final_up(d1))
-        
-        return out
-
-# ================ LOSS FUNCTIONS ================
-class DiceLossMulti(nn.Module):
-    def __init__(self, eps=1e-6):
-        super().__init__()
-        self.eps = eps
-    
-    def forward(self, logits, targets_onehot):
-        probs = torch.softmax(logits, dim=1)
-        dims = (0, 2, 3)
-        inter = (probs * targets_onehot).sum(dims)
-        union = (probs + targets_onehot).sum(dims)
-        dice = (2 * inter + self.eps) / (union + self.eps)
-        return 1.0 - dice.mean()
-
-class FocalLoss(nn.Module):
-    def __init__(self, alpha=None, gamma=2.0):
-        super().__init__()
-        self.alpha = alpha
-        self.gamma = gamma
-    
-    def forward(self, logits, targets):
-        ce_loss = nn.functional.cross_entropy(logits, targets, reduction='none', 
-                                              weight=self.alpha)
-        pt = torch.exp(-ce_loss)
-        focal_loss = ((1 - pt) ** self.gamma * ce_loss).mean()
-        return focal_loss
-
-class ComboLossMulti(nn.Module):
-    def __init__(self, weight=None, dice_w=3.0, focal_w=1.0):
-        super().__init__()
-        self.focal = FocalLoss(alpha=weight, gamma=2.0)
-        self.dice = DiceLossMulti()
-        self.focal_w = focal_w
-        self.dice_w = dice_w
-    
-    def forward(self, logits, targets):
-        focal_loss = self.focal(logits, targets)
-        
-        num_classes = logits.shape[1]
-        tgt_onehot = torch.nn.functional.one_hot(targets, num_classes=num_classes)
-        tgt_onehot = tgt_onehot.permute(0, 3, 1, 2).float().to(logits.device)
-        dice_loss = self.dice(logits, tgt_onehot)
-        
-        return self.focal_w * focal_loss + self.dice_w * dice_loss
-
-# ================ METRICS ================
-def iou_per_class(pred, true, num_classes=4):
-    pred = pred.view(-1).cpu().numpy()
-    true = true.view(-1).cpu().numpy()
-    ious = []
-    
-    for c in range(num_classes):
-        p = (pred == c)
-        t = (true == c)
-        inter = (p & t).sum()
-        union = p.sum() + t.sum() - inter
-        
-        if union == 0:
-            ious.append(1.0)
-        else:
-            ious.append(inter / union)
-    
-    return np.array(ious)
-
-# ================ TRAINING ================
-def train_one_epoch(model, loader, optim, lossf, device, scaler):
-    model.train()
-    running = 0.0
-    
-    for imgs, masks, _ in tqdm(loader, desc="Train", leave=False):
-        imgs = imgs.to(device)
-        masks = masks.to(device)
-        
-        optim.zero_grad()
-        
-        with autocast():
-            logits = model(imgs)
-            loss = lossf(logits, masks)
-        
-        scaler.scale(loss).backward()
-        scaler.step(optim)
-        scaler.update()
-        
-        running += loss.item() * imgs.size(0)
-    
-    return running / len(loader.dataset)
-
-def validate(model, loader, lossf, device):
-    model.eval()
-    running = 0.0
-    iou_list = []
-    
-    with torch.no_grad():
-        for imgs, masks, _ in tqdm(loader, desc="Val", leave=False):
-            imgs = imgs.to(device)
-            masks = masks.to(device)
+    success = 0
+    for img_path in images:
+        try:
+            img = cv2.imread(str(img_path), cv2.IMREAD_GRAYSCALE)
+            if img is None:
+                continue
             
-            logits = model(imgs)
-            loss = lossf(logits, masks)
-            running += loss.item() * imgs.size(0)
+            # Generate bbox
+            cx, cy, nw, nh = get_smart_bbox(img, matra_type)
             
-            preds = torch.argmax(logits, dim=1)
-            iou_list.append(iou_per_class(preds, masks))
-    
-    mean_iou = np.mean(iou_list, axis=0) if len(iou_list) > 0 else np.zeros(4)
-    return running / len(loader.dataset), mean_iou
-
-# ================ DATA COLLECTION ================
-def collect_image_paths(root, samples_per_class=None, 
-                        exts={".png", ".jpg", ".jpeg", ".bmp", ".tif"}):
-    root = Path(root)
-    if not root.exists():
-        raise FileNotFoundError(root)
-    
-    all_imgs = []
-    for sub in sorted([p for p in root.iterdir() if p.is_dir()]):
-        imgs = [str(p) for p in sub.rglob("*") if p.suffix.lower() in exts]
-        if len(imgs) == 0:
-            continue
-        
-        random.shuffle(imgs)
-        if samples_per_class:
-            imgs = imgs[:samples_per_class]
-        all_imgs += imgs
-    
-    random.shuffle(all_imgs)
-    return all_imgs
-
-# ================ MAIN ================
-def main(args):
-    set_seed(args.seed)
-    
-    # Create output directories
-    ensure_dir(args.out_dir)
-    ensure_dir(os.path.join(args.out_dir, "checkpoints"))
-    ensure_dir(os.path.join(args.out_dir, "visuals"))
-    ensure_dir(os.path.join(args.out_dir, "debug_labels"))
-
-    # Collect and split data
-    samples = collect_image_paths(args.data_root, 
-                                  samples_per_class=args.samples_per_class)
-    n_val = max(50, int(len(samples) * args.val_frac))
-    val_samples, train_samples = samples[:n_val], samples[n_val:]
-    
-    print(f"Total: {len(samples)}  Train: {len(train_samples)}  Val: {len(val_samples)}")
-
-    # Data augmentation
-    train_tf = T.Compose([
-        T.RandomResizedCrop((args.img_size, args.img_size), scale=(0.88, 1.0)),
-        T.RandomRotation(8),
-        T.RandomHorizontalFlip(0.5),
-        T.ColorJitter(brightness=0.15, contrast=0.15, saturation=0.1),
-        T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-    
-    val_tf = T.Compose([
-        T.Resize((args.img_size, args.img_size)),
-        T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
-
-    # Create datasets
-    ds_train = Modi4ClsDataset(train_samples, args.img_size, train_tf,
-                               debug_dir=os.path.join(args.out_dir, "debug_labels"))
-    ds_val = Modi4ClsDataset(val_samples, args.img_size, val_tf)
-
-    # Create data loaders
-    train_dl = DataLoader(ds_train, batch_size=args.batch_size, shuffle=True,
-                          num_workers=args.num_workers, pin_memory=True)
-    val_dl = DataLoader(ds_val, batch_size=args.batch_size, shuffle=False,
-                        num_workers=max(1, args.num_workers // 2), pin_memory=True)
-
-    # Setup device and model
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Device: {device}")
-
-    model = ResNet152_UNet_Multi(pretrained=True).to(device)
-
-    # Class weights (emphasize top and bottom matras)
-    weights = torch.tensor([0.1, 4.0, 1.0, 3.5], dtype=torch.float).to(device)
-    lossf = ComboLossMulti(weight=weights, dice_w=3.0, focal_w=1.0)
-
-    # Optimizer and scheduler
-    optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
-    scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-6)
-    scaler = GradScaler()
-
-    # Training loop
-    best_miou = -1.0
-    for epoch in range(1, args.epochs + 1):
-        tr_loss = train_one_epoch(model, train_dl, optimizer, lossf, device, scaler)
-        val_loss, val_iou = validate(model, val_dl, lossf, device)
-        scheduler.step()
-        
-        miou = float(np.mean(val_iou))
-        print(f"[Epoch {epoch}] Train Loss: {tr_loss:.4f}  Val Loss: {val_loss:.4f}")
-        print(f"  mIoU: {miou:.4f}  Class IoUs: {val_iou.tolist()}")
-        
-        if miou > best_miou:
-            best_miou = miou
-            torch.save(model.state_dict(),
-                      os.path.join(args.out_dir, "checkpoints", "best_model.pth"))
-            print("  ✓ Saved best model")
-
-    # Generate overlays on validation set
-    print("\nGenerating overlays on validation set...")
-    model.eval()
-    cnt = 0
-    
-    with torch.no_grad():
-        for img_t, _, paths in tqdm(val_dl, desc="Overlay", leave=False):
-            img_t = img_t.to(device)
-            logits = model(img_t)
-            preds = torch.argmax(logits, dim=1).cpu().numpy()
+            # Clamp values
+            cx = max(0.0, min(1.0, cx))
+            cy = max(0.0, min(1.0, cy))
+            nw = max(0.01, min(1.0, nw))
+            nh = max(0.01, min(1.0, nh))
             
-            for i, p in enumerate(paths):
-                if cnt >= args.max_overlays:
-                    break
-                
-                mask4 = preds[i].astype(np.uint8)
-                binary = (mask4 > 0).astype(np.uint8) * 255
-                
-                orig = Image.open(p).convert("L").resize((args.img_size, args.img_size))
-                class_mask = classify_components_strict(binary, np.array(orig))
-                
-                save_overlay_colored(
-                    orig, class_mask,
-                    os.path.join(args.out_dir, "visuals", 
-                                f"{Path(p).stem}_overlay_{cnt}.png")
-                )
-                cnt += 1
+            # Copy image
+            dest_img = out_img_dir / img_path.name
+            from shutil import copyfile
+            copyfile(str(img_path), str(dest_img))
             
-            if cnt >= args.max_overlays:
-                break
+            # Write label
+            label_path = out_label_dir / (img_path.stem + '.txt')
+            with open(label_path, 'w') as f:
+                f.write(f"{class_idx} {cx:.6f} {cy:.6f} {nw:.6f} {nh:.6f}\n")
+            
+            success += 1
+        except Exception as e:
+            print(f"Error processing {img_path}: {e}")
     
-    print(f"\nDone! Outputs saved to: {args.out_dir}")
-    print(f"Best mIoU achieved: {best_miou:.4f}")
+    return len(images), success
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Enhanced Modi Matra Segmentation")
-    parser.add_argument("--data_root", required=True, type=str,
-                       help="Root directory containing Modi script images")
-    parser.add_argument("--out_dir", default="./modi_matra_out_enhanced", type=str,
-                       help="Output directory")
-    parser.add_argument("--samples_per_class", default=None, type=int,
-                       help="Limit samples per class subdirectory")
-    parser.add_argument("--img_size", default=384, type=int,
-                       help="Input image size")
-    parser.add_argument("--batch_size", default=6, type=int,
-                       help="Batch size")
-    parser.add_argument("--epochs", default=25, type=int,
-                       help="Number of training epochs")
-    parser.add_argument("--lr", default=2e-4, type=float,
-                       help="Learning rate")
-    parser.add_argument("--num_workers", default=6, type=int,
-                       help="Number of data loader workers")
-    parser.add_argument("--val_frac", default=0.06, type=float,
-                       help="Validation set fraction")
-    parser.add_argument("--seed", default=42, type=int,
-                       help="Random seed")
-    parser.add_argument("--max_overlays", default=300, type=int,
-                       help="Maximum overlay visualizations to generate")
-    
+def main():
+    parser = argparse.ArgumentParser(
+        description='Auto-generate YOLO labels for Modi matras from folder structure'
+    )
+    parser.add_argument('--data_root', required=True, 
+                       help='Root directory with character folders')
+    parser.add_argument('--out', default='datasets/modi',
+                       help='Output directory for YOLO dataset')
+    parser.add_argument('--train_split', type=float, default=0.85,
+                       help='Fraction of data for training (rest for validation)')
     args = parser.parse_args()
     
-    if args.samples_per_class is not None and args.samples_per_class <= 0:
-        args.samples_per_class = None
+    data_root = Path(args.data_root)
+    out = Path(args.out)
     
-    main(args)
+    # Create output directories
+    train_img = out / 'images' / 'train'
+    train_lbl = out / 'labels' / 'train'
+    val_img = out / 'images' / 'val'
+    val_lbl = out / 'labels' / 'val'
+    
+    for d in [train_img, train_lbl, val_img, val_lbl]:
+        d.mkdir(parents=True, exist_ok=True)
+    
+    # Get all character folders
+    folders = [f for f in data_root.iterdir() if f.is_dir()]
+    print(f"Found {len(folders)} character folders")
+    
+    # Process each folder
+    total_imgs = 0
+    total_success = 0
+    stats = {'top_matra': 0, 'side_matra': 0, 'bottom_matra': 0}
+    
+    for folder in tqdm(folders, desc="Processing folders"):
+        folder_name = folder.name
+        matra_type = parse_folder_name(folder_name)
+        
+        if matra_type is None:
+            continue
+        
+        # Decide train/val split at folder level for better distribution
+        import random
+        random.seed(42)  # Consistent splits
+        is_train = random.random() < args.train_split
+        
+        img_dir = train_img if is_train else val_img
+        lbl_dir = train_lbl if is_train else val_lbl
+        
+        total, success = process_folder(folder, img_dir, lbl_dir)
+        total_imgs += total
+        total_success += success
+        stats[matra_type] += success
+    
+    # Create YAML config
+    yaml_content = f"""# Modi Matra Detection Dataset
+path: {out.absolute()}
+train: images/train
+val: images/val
+
+nc: 3
+names: ['top_matra', 'side_matra', 'bottom_matra']
+
+# Dataset statistics
+# Total images: {total_success}
+# Top matras: {stats['top_matra']}
+# Side matras: {stats['side_matra']}
+# Bottom matras: {stats['bottom_matra']}
+"""
+    
+    yaml_path = out / 'modi_matra.yaml'
+    with open(yaml_path, 'w') as f:
+        f.write(yaml_content)
+    
+    print(f"\n{'='*60}")
+    print(f"Dataset created successfully!")
+    print(f"{'='*60}")
+    print(f"Total images processed: {total_success}/{total_imgs}")
+    print(f"\nClass distribution:")
+    print(f"  Top matras:    {stats['top_matra']}")
+    print(f"  Side matras:   {stats['side_matra']}")
+    print(f"  Bottom matras: {stats['bottom_matra']}")
+    print(f"\nDataset YAML: {yaml_path}")
+    print(f"\nTo train:")
+    print(f"  yolo detect train data={yaml_path} model=yolov8n.pt epochs=50 imgsz=640")
+    
+if __name__ == '__main__':
+    main()
