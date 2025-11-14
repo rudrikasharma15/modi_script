@@ -1,18 +1,11 @@
 #!/usr/bin/env python3
-r"""
-Train matra-only segmentation using vowel folders only.
-ResNet50 encoder + UNet-like decoder, AMP, IoU/Dice metrics,
-and automatic matra mask generation focused on top/bottom regions.
-
-Example usage (PowerShell):
-python "C:\path\to\train_modi_matra_only.py" `
-  --vowel_root "C:\Users\admin\Desktop\MODI_HChar\MODI_HChar\vowels" `
-  --out_dir "C:\Users\admin\Desktop\MODI_HChar\matra_only_out" `
-  --samples_per_class 1000 `
-  --epochs 15 `
-  --batch_size 16
 """
+ResNet152-UNet full 4-class matra segmentation with improved auto-labeler.
+0 = background, 1 = top matra, 2 = inline matra, 3 = bottom matra
 
+Usage (single-line, PowerShell):
+python "C:/Users/admin/Desktop/research2/train_modi_matra_resnet152_multiclass.py" --data_root "C:/Users/admin/Downloads/Dataset_Modi/Dataset_Modi" --out_dir "C:/Users/admin/Desktop/MODI_matra_out" --img_size 384 --epochs 20 --batch_size 6
+"""
 import os
 import random
 from pathlib import Path
@@ -28,12 +21,10 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as T
 from torchvision import models
 from torch.cuda.amp import autocast, GradScaler
-from torch.optim import Adam
+from torch.optim import AdamW
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-# ------------------------------
-# Utilities
-# ------------------------------
+# ---------------- utils ----------------
 def set_seed(seed=42):
     random.seed(seed)
     np.random.seed(seed)
@@ -41,117 +32,217 @@ def set_seed(seed=42):
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-def ensure_dir(d):
-    Path(d).mkdir(parents=True, exist_ok=True)
+def ensure_dir(p):
+    Path(p).mkdir(parents=True, exist_ok=True)
 
-# ------------------------------
-# Matra mask generator
-# ------------------------------
-def matra_mask_strict(img_gray, top_frac=0.25, bottom_frac=0.25, min_area=15, max_area_ratio=0.04):
-    if len(img_gray.shape) == 3:
-        img_gray = cv2.cvtColor(img_gray, cv2.COLOR_BGR2GRAY)
-    h, w = img_gray.shape
-    blur = cv2.GaussianBlur(img_gray, (3,3), 0)
-    _, bin_inv = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    mask = np.zeros_like(bin_inv)
-    top_band = bin_inv[:int(h*top_frac), :]
-    bottom_band = bin_inv[int(h*(1-bottom_frac)):, :]
+# ---------------- improved auto-labeler ----------------
+def generate_4class_mask_improved(gray):
+    """
+    Input: gray numpy array (H,W) or 3-channel image
+    Output: uint8 mask (H,W) with values {0,1,2,3}
+    """
+    if len(gray.shape) == 3:
+        gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
+    h, w = gray.shape
 
-    def filter_band(band, y0):
-        num, lbl, stats, _ = cv2.connectedComponentsWithStats(band)
-        for i in range(1, num):
-            x, y, bw, bh, area = stats[i]
-            aspect = bw / (bh + 1e-6)
-            if area < min_area or area > max_area_ratio*h*w or aspect > 8:
-                continue
-            mask[y0+y:y0+y+bh, x:x+bw] = 255
-    filter_band(top_band, 0)
-    filter_band(bottom_band, int(h*(1-bottom_frac)))
+    # basic stroke extraction (strokes -> white)
+    blur = cv2.GaussianBlur(gray, (3,3), 0)
+    _, th = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    strokes = 255 - th
 
-    # morphological cleanup (thinning)
-    mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,
-                            cv2.getStructuringElement(cv2.MORPH_RECT, (2,2)))
-    mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE,
-                            cv2.getStructuringElement(cv2.MORPH_RECT, (3,1)))
-    return mask
+    # clean small noise but keep thin strokes
+    strokes = cv2.morphologyEx(strokes, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT,(3,3)))
+    strokes = cv2.morphologyEx(strokes, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT,(3,1)))
 
-# ------------------------------
-# Overlay saving
-# ------------------------------
-def save_overlay(rgb_pil, mask_bin, out_path):
-    rgb = np.array(rgb_pil.convert("RGB"))
-    mask_resized = cv2.resize(mask_bin, (rgb.shape[1], rgb.shape[0]), interpolation=cv2.INTER_NEAREST)
+    # detect potential headline using horizontal enhancement
+    horiz_k = cv2.getStructuringElement(cv2.MORPH_RECT, (max(3, w//8), 3))
+    horiz = cv2.morphologyEx(strokes, cv2.MORPH_CLOSE, horiz_k)
+    horiz = cv2.morphologyEx(horiz, cv2.MORPH_OPEN, horiz_k)
+
+    n_h, lbl_h, stats_h, cent_h = cv2.connectedComponentsWithStats((horiz>0).astype(np.uint8), connectivity=8)
+    headline_y = None
+    best_bw = 0
+    for i in range(1, n_h):
+        x,y,bw,bh,area = stats_h[i]
+        if bw > best_bw and bw > w*0.25 and bh < h*0.2:
+            best_bw = bw
+            headline_y = int(cent_h[i][1])
+
+    # fallback body band by projection if no headline found
+    proj = np.mean((strokes>0).astype(np.uint8), axis=1)
+    proj_s = cv2.GaussianBlur((proj*255).astype(np.uint8),(11,1),0).astype(np.float32)/255.0
+    proj_thr = max(0.05, proj_s.max()*0.45)
+    rows = np.where(proj_s >= proj_thr)[0]
+    if rows.size>0:
+        b0,b1 = int(rows.min()), int(rows.max())
+    else:
+        b0,b1 = int(0.35*h), int(0.65*h)
+
+    if headline_y is not None:
+        band = max(2, int(h*0.08))
+        body_y0 = max(0, headline_y - band)
+        body_y1 = min(h-1, headline_y + band)
+    else:
+        body_y0, body_y1 = b0, b1
+
+    # connected components on full strokes
+    n, lbl, stats, cents = cv2.connectedComponentsWithStats((strokes>0).astype(np.uint8), connectivity=8)
+    out = np.zeros((h,w), dtype=np.uint8)
+
+    for i in range(1, n):
+        x,y,bw,bh,area = stats[i]
+        if area < 8:
+            # very small: consider inline if overlapping body band modestly
+            coords = np.where(lbl==i)[0]
+            if coords.size>0:
+                overlap = np.mean((coords >= body_y0) & (coords <= body_y1))
+                if overlap > 0.25:
+                    out[lbl==i] = 2
+            continue
+
+        cx, cy = cents[i]
+        cy = float(cy)
+
+        rows_i = np.unique(np.where(lbl==i)[0])
+        overlap = np.mean((rows_i >= body_y0) & (rows_i <= body_y1)) if rows_i.size>0 else 0.0
+
+        if overlap >= 0.4:
+            cls = 2
+        else:
+            if cy < body_y0 - max(2, int(h*0.04)):
+                cls = 1
+            elif cy > body_y1 + max(2, int(h*0.04)):
+                cls = 3
+            else:
+                cls = 2
+
+        out[lbl==i] = cls
+
+    # per-class morphological refine
+    for c in (1,2,3):
+        m = (out==c).astype(np.uint8)*255
+        if m.sum()==0:
+            continue
+        m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT,(5,1)))
+        m = cv2.morphologyEx(m, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT,(3,3)))
+        out[m>0] = c
+
+    return out
+
+# ---------------- strict post-classifier for overlays ----------------
+def classify_components_strict(mask_bin, orig_gray):
+    """
+    mask_bin: binary mask (0/255)
+    orig_gray: np.array grayscale image
+    returns class_mask (0/1/2/3)
+    """
+    if mask_bin.dtype != np.uint8:
+        mb = (mask_bin>0).astype(np.uint8)*255
+    else:
+        mb = mask_bin.copy()
+    h,w = mb.shape
+
+    g = orig_gray.copy() if isinstance(orig_gray, np.ndarray) else np.array(orig_gray)
+    blur = cv2.GaussianBlur(g, (3,3), 0)
+    _, th = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    strokes = 255 - th
+    horiz_k = cv2.getStructuringElement(cv2.MORPH_RECT, (max(3, w//8), 3))
+    horiz = cv2.morphologyEx(strokes, cv2.MORPH_CLOSE, horiz_k)
+    n_h, lbl_h, stats_h, cent_h = cv2.connectedComponentsWithStats((horiz>0).astype(np.uint8), connectivity=8)
+    headline_y = None
+    for i in range(1, n_h):
+        x,y,bw,bh,area = stats_h[i]
+        if bw > w*0.25 and bh < h*0.15:
+            headline_y = int(cent_h[i][1])
+            break
+
+    proj = np.mean((strokes>0).astype(np.uint8), axis=1)
+    proj_s = cv2.GaussianBlur((proj*255).astype(np.uint8),(11,1),0).astype(np.float32)/255.0
+    pr_thr = max(0.05, proj_s.max()*0.45)
+    rows = np.where(proj_s >= pr_thr)[0]
+    if rows.size>0:
+        b0,b1 = int(rows.min()), int(rows.max())
+    else:
+        b0,b1 = int(0.35*h), int(0.65*h)
+
+    if headline_y is not None:
+        band = max(2, int(h*0.08))
+        body_y0 = max(0, headline_y - band)
+        body_y1 = min(h-1, headline_y + band)
+    else:
+        body_y0, body_y1 = b0, b1
+
+    class_mask = np.zeros((h,w), dtype=np.uint8)
+    n, lbl, stats, cents = cv2.connectedComponentsWithStats((mb>0).astype(np.uint8), connectivity=8)
+    for i in range(1, n):
+        x,y,bw,bh,area = stats[i]
+        if area < 6:
+            continue
+        cx, cy = cents[i]; cy = float(cy)
+        rows_i = np.unique(np.where(lbl==i)[0])
+        overlap = np.mean((rows_i >= body_y0) & (rows_i <= body_y1)) if rows_i.size>0 else 0.0
+        if overlap >= 0.35:
+            cls = 2
+        else:
+            if cy < body_y0 - h*0.04:
+                cls = 1
+            elif cy > body_y1 + h*0.04:
+                cls = 3
+            else:
+                cls = 2
+        class_mask[lbl==i] = cls
+    return class_mask
+
+def save_overlay_colored(pil_gray, class_mask, out_path):
+    rgb = np.array(pil_gray.convert("RGB"))
+    h,w = rgb.shape[:2]
+    mask_resized = cv2.resize(class_mask.astype(np.uint8), (w,h), interpolation=cv2.INTER_NEAREST)
     overlay = rgb.copy()
-    overlay[mask_resized > 0] = [255, 0, 0]
+    overlay[mask_resized==1] = [255,0,0]
+    overlay[mask_resized==2] = [0,255,0]
+    overlay[mask_resized==3] = [0,0,255]
     blended = cv2.addWeighted(overlay, 0.6, rgb, 0.4, 0)
     Image.fromarray(blended).save(out_path)
 
-# ------------------------------
-# Dataset building
-# ------------------------------
-def build_vowel_samples(vowel_root, samples_per_class=None, seed=42):
-    vowel_root = Path(vowel_root)
-    exts = {".png", ".jpg", ".jpeg", ".bmp", ".tif"}
-    all_samples = []
-    rng = random.Random(seed)
-
-    if not vowel_root.exists():
-        raise FileNotFoundError(f"{vowel_root} not found")
-
-    for sub in sorted([p for p in vowel_root.iterdir() if p.is_dir()]):
-        imgs = [str(p) for p in sub.rglob("*") if p.suffix.lower() in exts]
-        if len(imgs) == 0:
-            continue
-        rng.shuffle(imgs)
-        if samples_per_class:
-            imgs = imgs[:samples_per_class]
-        all_samples += [(im, sub.name) for im in imgs]
-    rng.shuffle(all_samples)
-    print(f"Collected {len(all_samples)} vowel samples from {len(list(vowel_root.iterdir()))} vowel classes.")
-    return all_samples
-
-# ------------------------------
-# Dataset
-# ------------------------------
-class MatraOnlyDataset(Dataset):
-    def __init__(self, samples, resize=(320, 320), transforms=None, debug_save_mask_dir=None):
-        self.samples = samples
-        self.resize = resize
-        self.transforms = transforms or T.Compose([
-            T.Resize(resize),
-            T.ToTensor(),
-            T.Normalize(mean=[0.485, 0.456, 0.406],
-                        std=[0.229, 0.224, 0.225])
-        ])
-        self.debug_save_mask_dir = debug_save_mask_dir
-        if debug_save_mask_dir:
-            ensure_dir(debug_save_mask_dir)
+# ---------------- Dataset ----------------
+class Modi4ClsDataset(Dataset):
+    def __init__(self, paths, img_size=384, transforms=None, debug_dir=None):
+        self.paths = paths
+        self.img_size = img_size
+        self.transforms = transforms
+        self.debug_dir = debug_dir
+        if debug_dir:
+            ensure_dir(debug_dir)
 
     def __len__(self):
-        return len(self.samples)
+        return len(self.paths)
 
     def __getitem__(self, idx):
-        img_path, cls = self.samples[idx]
-        pil = Image.open(img_path).convert("L")
-        pil_resized = pil.resize(self.resize, Image.BILINEAR)
-        arr = np.array(pil_resized)
-        mask = matra_mask_strict(arr)
-        if self.debug_save_mask_dir and (idx % 200 == 0):
-            dst = Path(self.debug_save_mask_dir) / f"{Path(img_path).stem}_mask.png"
-            cv2.imwrite(str(dst), mask)
+        p = self.paths[idx]
+        pil = Image.open(p).convert("L")
+        pil_r = pil.resize((self.img_size, self.img_size), Image.BILINEAR)
+        arr = np.array(pil_r)
+        mask = generate_4class_mask_improved(arr)    # uint8 {0..3}
+        if self.debug_dir and (idx % 200 == 0):
+            outp = Path(self.debug_dir) / f"{Path(p).stem}_labelgen.png"
+            rgb = np.array(pil_r.convert("RGB"))
+            overlay = rgb.copy()
+            overlay[mask==1] = [255,0,0]; overlay[mask==2] = [0,255,0]; overlay[mask==3] = [0,0,255]
+            Image.fromarray(overlay).save(outp)
+        img = pil_r.convert("RGB")
+        if self.transforms:
+            img = self.transforms(img)
+        else:
+            tf = T.Compose([T.ToTensor(), T.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])])
+            img = tf(img)
+        mask_t = torch.from_numpy(mask.astype(np.int64))
+        return img, mask_t, p
 
-        img_rgb = pil_resized.convert("RGB")
-        img_tensor = self.transforms(img_rgb)
-        mask_tensor = torch.from_numpy((mask > 0).astype(np.float32)).unsqueeze(0)
-        return img_tensor, mask_tensor, img_path
-
-# ------------------------------
-# Model
-# ------------------------------
-class ResNet50UNet(nn.Module):
-    def __init__(self, pretrained=True):
+# ---------------- Model ----------------
+class ResNet152_UNet_Multi(nn.Module):
+    def __init__(self, pretrained=True, num_classes=4):
         super().__init__()
-        resnet = models.resnet50(weights=models.ResNet50_Weights.DEFAULT if pretrained else None)
+        resnet = models.resnet152(weights=models.ResNet152_Weights.DEFAULT if pretrained else None)
         self.conv1 = nn.Sequential(resnet.conv1, resnet.bn1, resnet.relu)
         self.maxpool = resnet.maxpool
         self.layer1 = resnet.layer1
@@ -159,221 +250,217 @@ class ResNet50UNet(nn.Module):
         self.layer3 = resnet.layer3
         self.layer4 = resnet.layer4
 
-        def up_conv(in_c, out_c):
-            return nn.ConvTranspose2d(in_c, out_c, kernel_size=2, stride=2)
-
-        def conv_block(in_c, out_c):
+        def upc(a,b): return nn.ConvTranspose2d(a,b,2,2)
+        def block(a,b):
             return nn.Sequential(
-                nn.Conv2d(in_c, out_c, 3, padding=1),
-                nn.BatchNorm2d(out_c),
+                nn.Conv2d(a,b,3,padding=1,bias=False),
+                nn.BatchNorm2d(b),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(out_c, out_c, 3, padding=1),
-                nn.BatchNorm2d(out_c),
-                nn.ReLU(inplace=True)
+                nn.Conv2d(b,b,3,padding=1,bias=False),
+                nn.BatchNorm2d(b),
+                nn.ReLU(inplace=True),
             )
+        self.up4 = upc(2048,1024); self.dec4 = block(2048,1024)
+        self.up3 = upc(1024,512);  self.dec3 = block(1024,512)
+        self.up2 = upc(512,256);   self.dec2 = block(512,256)
+        self.up1 = upc(256,64);    self.dec1 = block(128,64)
+        self.final_up = upc(64,64)
+        self.final = nn.Conv2d(64, num_classes, 1)
 
-        self.up4, self.dec4 = up_conv(2048, 1024), conv_block(2048, 1024)
-        self.up3, self.dec3 = up_conv(1024, 512), conv_block(1024, 512)
-        self.up2, self.dec2 = up_conv(512, 256), conv_block(512, 256)
-        self.up1, self.dec1 = up_conv(256, 64), conv_block(128, 64)
-        self.final_up = nn.ConvTranspose2d(64, 64, 2, 2)
-        self.final_conv = nn.Conv2d(64, 1, 1)
-
-    def forward(self, x):
+    def forward(self,x):
         x0 = self.conv1(x)
         x1 = self.layer1(self.maxpool(x0))
         x2 = self.layer2(x1)
         x3 = self.layer3(x2)
         x4 = self.layer4(x3)
-        u4 = self.up4(x4)
-        d4 = self.dec4(torch.cat([u4, x3], dim=1))
-        u3 = self.up3(d4)
-        d3 = self.dec3(torch.cat([u3, x2], dim=1))
-        u2 = self.up2(d3)
-        d2 = self.dec2(torch.cat([u2, x1], dim=1))
-        u1 = self.up1(d2)
-        d1 = self.dec1(torch.cat([u1, x0], dim=1))
-        return self.final_conv(self.final_up(d1))
+        d4 = self.dec4(torch.cat([self.up4(x4), x3], dim=1))
+        d3 = self.dec3(torch.cat([self.up3(d4), x2], dim=1))
+        d2 = self.dec2(torch.cat([self.up2(d3), x1], dim=1))
+        d1 = self.dec1(torch.cat([self.up1(d2), x0], dim=1))
+        out = self.final(self.final_up(d1))
+        return out
 
-# ------------------------------
-# Loss + metrics
-# ------------------------------
-class BCEDiceLoss(nn.Module):
-    def __init__(self, bce_w=1.0, dice_w=1.0):
+# ---------------- Loss: weighted CE + Dice ----------------
+class DiceLossMulti(nn.Module):
+    def __init__(self, eps=1e-6):
         super().__init__()
-        self.bce = nn.BCEWithLogitsLoss()
-        self.bce_w = bce_w
-        self.dice_w = dice_w
+        self.eps = eps
+    def forward(self, logits, targets_onehot):
+        probs = torch.softmax(logits, dim=1)
+        dims = (0,2,3)
+        inter = (probs * targets_onehot).sum(dims)
+        union = (probs + targets_onehot).sum(dims)
+        dice = (2*inter + self.eps) / (union + self.eps)
+        return 1.0 - dice.mean()
 
+class ComboLossMulti(nn.Module):
+    def __init__(self, weight=None, dice_w=2.0, ce_w=1.0):
+        super().__init__()
+        self.ce = nn.CrossEntropyLoss(weight=weight) if weight is not None else nn.CrossEntropyLoss()
+        self.dice = DiceLossMulti()
+        self.ce_w = ce_w; self.dice_w = dice_w
     def forward(self, logits, targets):
-        b = self.bce(logits, targets)
-        probs = torch.sigmoid(logits)
-        inter = (probs * targets).sum(dim=(2, 3))
-        dice = (2 * inter + 1e-6) / (probs.sum(dim=(2, 3)) + targets.sum(dim=(2, 3)) + 1e-6)
-        return self.bce_w * b + self.dice_w * (1 - dice.mean())
+        # logits (B,C,H,W), targets (B,H,W)
+        ce_loss = self.ce(logits, targets)
+        num_classes = logits.shape[1]
+        tgt_onehot = torch.nn.functional.one_hot(targets, num_classes=num_classes).permute(0,3,1,2).float().to(logits.device)
+        dice_loss = self.dice(logits, tgt_onehot)
+        return self.ce_w * ce_loss + self.dice_w * dice_loss
 
-def compute_metrics(logits, targets, thr=0.4):
-    probs = torch.sigmoid(logits)
-    preds = (probs > thr).float()
-    tp = (preds * targets).sum(dim=(1, 2, 3))
-    fp = (preds * (1 - targets)).sum(dim=(1, 2, 3))
-    fn = ((1 - preds) * targets).sum(dim=(1, 2, 3))
-    inter = tp
-    union = (preds + targets - preds * targets).sum(dim=(1, 2, 3))
-    iou = ((inter + 1e-6) / (union + 1e-6)).mean().item()
-    dice = (2 * inter / (preds.sum(dim=(1, 2, 3)) + targets.sum(dim=(1, 2, 3)) + 1e-6)).mean().item()
-    return {"iou": iou, "dice": dice}
+# ---------------- metrics ----------------
+def iou_per_class(pred, true, num_classes=4):
+    pred = pred.view(-1).cpu().numpy()
+    true = true.view(-1).cpu().numpy()
+    ious = []
+    for c in range(num_classes):
+        p = (pred == c)
+        t = (true == c)
+        inter = (p & t).sum()
+        union = p.sum() + t.sum() - inter
+        if union == 0:
+            ious.append(1.0)
+        else:
+            ious.append(inter/union)
+    return np.array(ious)
 
-# ------------------------------
-# Training & Validation
-# ------------------------------
-def train_one_epoch(model, loader, optimizer, criterion, device, scaler):
+# ---------------- train/val ----------------
+def train_one_epoch(model, loader, optim, lossf, device, scaler):
     model.train()
-    running_loss = 0.0
+    running = 0.0
     for imgs, masks, _ in tqdm(loader, desc="Train", leave=False):
-        imgs, masks = imgs.to(device), masks.to(device)
-        optimizer.zero_grad()
+        imgs = imgs.to(device); masks = masks.to(device)
+        optim.zero_grad()
         with autocast():
             logits = model(imgs)
-            loss = criterion(logits, masks)
+            loss = lossf(logits, masks)
         scaler.scale(loss).backward()
-        scaler.step(optimizer)
+        scaler.step(optim)
         scaler.update()
-        running_loss += loss.item() * imgs.size(0)
-    return running_loss / len(loader.dataset)
+        running += loss.item() * imgs.size(0)
+    return running / len(loader.dataset)
 
-def validate(model, loader, criterion, device, thr=0.4):
+def validate(model, loader, lossf, device):
     model.eval()
-    total_loss, metrics_list = 0.0, []
+    running = 0.0
+    iou_list = []
     with torch.no_grad():
         for imgs, masks, _ in tqdm(loader, desc="Val", leave=False):
-            imgs, masks = imgs.to(device), masks.to(device)
+            imgs = imgs.to(device); masks = masks.to(device)
             logits = model(imgs)
-            loss = criterion(logits, masks)
-            total_loss += loss.item() * imgs.size(0)
-            metrics_list.append(compute_metrics(logits, masks, thr))
-    avg = {k: np.mean([m[k] for m in metrics_list]) for k in metrics_list[0]}
-    return total_loss / len(loader.dataset), avg
+            loss = lossf(logits, masks)
+            running += loss.item() * imgs.size(0)
+            preds = torch.argmax(logits, dim=1)
+            iou_list.append(iou_per_class(preds, masks))
+    mean_iou = np.mean(iou_list, axis=0) if len(iou_list)>0 else np.zeros(4)
+    return running / len(loader.dataset), mean_iou
 
-# ------------------------------
-# Main
-# ------------------------------
+# ---------------- collect images ----------------
+def collect_image_paths(root, samples_per_class=None, exts={".png",".jpg",".jpeg",".bmp",".tif"}):
+    root = Path(root)
+    if not root.exists():
+        raise FileNotFoundError(root)
+    all_imgs = []
+    for sub in sorted([p for p in root.iterdir() if p.is_dir()]):
+        imgs = [str(p) for p in sub.rglob("*") if p.suffix.lower() in exts]
+        if len(imgs)==0:
+            continue
+        random.shuffle(imgs)
+        if samples_per_class:
+            imgs = imgs[:samples_per_class]
+        all_imgs += imgs
+    random.shuffle(all_imgs)
+    return all_imgs
+
+# ---------------- main ----------------
 def main(args):
     set_seed(args.seed)
-    ensure_dir(args.out_dir)
-    ensure_dir(os.path.join(args.out_dir, "checkpoints"))
-    ensure_dir(os.path.join(args.out_dir, "visuals"))
+    ensure_dir(args.out_dir); ensure_dir(os.path.join(args.out_dir,"checkpoints")); ensure_dir(os.path.join(args.out_dir,"visuals"))
+    ensure_dir(os.path.join(args.out_dir,"debug_labels"))
 
-    # ------------------ Dataset setup ------------------
-    samples = build_vowel_samples(args.vowel_root, samples_per_class=args.samples_per_class, seed=args.seed)
-    random.shuffle(samples)
-    n_val = max(1, int(len(samples) * args.val_frac))
+    samples = collect_image_paths(args.data_root, samples_per_class=args.samples_per_class)
+    n_val = max(50, int(len(samples) * args.val_frac))
     val_samples, train_samples = samples[:n_val], samples[n_val:]
-    print(f"Train: {len(train_samples)} | Val: {len(val_samples)}")
+    print(f"Total {len(samples)}  Train {len(train_samples)}  Val {len(val_samples)}")
 
-    resize = (args.img_size, args.img_size)
-    train_tfms = T.Compose([
-        T.RandomResizedCrop(resize, scale=(0.8, 1.0)),
+    train_tf = T.Compose([
+        T.RandomResizedCrop((args.img_size,args.img_size), scale=(0.85,1.0)),
+        T.RandomRotation(6),
         T.RandomHorizontalFlip(0.5),
+        T.ColorJitter(0.12,0.12),
         T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        T.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])
     ])
-    val_tfms = T.Compose([
-        T.Resize(resize),
-        T.ToTensor(),
-        T.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+    val_tf = T.Compose([T.Resize((args.img_size,args.img_size)), T.ToTensor(), T.Normalize([0.485,0.456,0.406],[0.229,0.224,0.225])])
 
-    train_ds = MatraOnlyDataset(train_samples, resize, train_tfms)
-    val_ds = MatraOnlyDataset(val_samples, resize, val_tfms)
+    ds_train = Modi4ClsDataset(train_samples, args.img_size, train_tf, debug_dir=os.path.join(args.out_dir,"debug_labels"))
+    ds_val = Modi4ClsDataset(val_samples, args.img_size, val_tf)
 
-    train_dl = DataLoader(train_ds, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
-    val_dl = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, num_workers=max(1, args.num_workers // 2))
+    train_dl = DataLoader(ds_train, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers, pin_memory=True)
+    val_dl = DataLoader(ds_val, batch_size=args.batch_size, shuffle=False, num_workers=max(1,args.num_workers//2), pin_memory=True)
 
-    # ------------------ Model setup ------------------
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print("Device:", device)
-    model = ResNet50UNet(pretrained=True).to(device)
-    criterion = BCEDiceLoss(bce_w=1.0, dice_w=2.0)
-    optimizer = Adam(model.parameters(), lr=args.lr, weight_decay=1e-5)
+
+    model = ResNet152_UNet_Multi(pretrained=True).to(device)
+
+    # suggested weights (tune if necessary) - more weight to top(1) and bottom(3)
+    weights = torch.tensor([0.1, 3.0, 1.0, 2.5], dtype=torch.float).to(device)
+    lossf = ComboLossMulti(weight=weights, dice_w=2.0, ce_w=1.0)
+
+    optimizer = AdamW(model.parameters(), lr=args.lr, weight_decay=1e-5)
     scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs, eta_min=1e-6)
     scaler = GradScaler()
 
-    best_iou = -1.0
-
-    # ------------------ Training loop ------------------
-    for epoch in range(1, args.epochs + 1):
-        tr_loss = train_one_epoch(model, train_dl, optimizer, criterion, device, scaler)
-        val_loss, val_m = validate(model, val_dl, criterion, device, thr=args.save_thresh)
+    best_miou = -1.0
+    for epoch in range(1, args.epochs+1):
+        tr_loss = train_one_epoch(model, train_dl, optimizer, lossf, device, scaler)
+        val_loss, val_iou = validate(model, val_dl, lossf, device)
         scheduler.step()
-        print(f"[{epoch}/{args.epochs}] Train: {tr_loss:.4f} | Val: {val_loss:.4f} | IoU: {val_m['iou']:.4f} | Dice: {val_m['dice']:.4f}")
+        miou = float(np.mean(val_iou))
+        print(f"[{epoch}] TL {tr_loss:.4f}  VL {val_loss:.4f}  mIoU {miou:.4f}  clsIoU {val_iou.tolist()}")
+        if miou > best_miou:
+            best_miou = miou
+            torch.save(model.state_dict(), os.path.join(args.out_dir,"checkpoints","best_model.pth"))
+            print("Saved best.")
 
-        if val_m["iou"] > best_iou:
-            best_iou = val_m["iou"]
-            torch.save(model.state_dict(), os.path.join(args.out_dir, "checkpoints", "best_model.pth"))
-            print(f"✅ New best IoU {best_iou:.4f} — model saved.")
-
-    # ------------------ Overlay Generation ------------------
-    print("Creating validation overlays (up to 200)...")
+    # generate overlays on validation set using strict classifier
+    print("Generating overlays on validation set...")
     model.eval()
     cnt = 0
     with torch.no_grad():
-        for imgs, _, paths in tqdm(val_dl, desc="Overlay", leave=False):
-            imgs = imgs.to(device)
-            preds = torch.sigmoid(model(imgs)).cpu().numpy()
-
+        for img_t, _, paths in tqdm(val_dl, desc="Overlay", leave=False):
+            img_t = img_t.to(device)
+            logits = model(img_t)
+            preds = torch.argmax(logits, dim=1).cpu().numpy()  # (B,H,W)
             for i, p in enumerate(paths):
-                if cnt >= 200:
+                if cnt >= args.max_overlays:
                     break
-
-                # --- Threshold prediction ---
-                mask = (preds[i, 0] > 0.5).astype(np.uint8)
-
-                # --- Clean up mask: keep only top/bottom matras ---
-                num, lbl, stats, _ = cv2.connectedComponentsWithStats(mask)
-                clean = np.zeros_like(mask)
-                h, w = mask.shape
-                for j in range(1, num):
-                    x, y, bw, bh, area = stats[j]
-                    # keep only smaller top/bottom components
-                    if area < 0.05 * (h * w) and (y < h * 0.4 or y > h * 0.6):
-                        clean[lbl == j] = 1
-                mask = clean
-
-                # --- Morphological refine ---
-                kernel_open = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
-                kernel_close = cv2.getStructuringElement(cv2.MORPH_RECT, (5, 2))
-                mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel_open)
-                mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel_close)
-                mask = (mask * 255).astype(np.uint8)
-
-                # --- Save overlay ---
-                pil = Image.open(p).convert("L").resize(resize)
-                save_overlay(pil, mask, os.path.join(args.out_dir, "visuals", f"{Path(p).stem}_overlay_{cnt}.png"))
+                mask4 = preds[i].astype(np.uint8)
+                # refine with strict component classifier applied to predicted inline/top/bottom combined binary
+                binary = (mask4 > 0).astype(np.uint8)*255
+                orig = Image.open(p).convert("L").resize((args.img_size, args.img_size))
+                class_mask = classify_components_strict(binary, np.array(orig))
+                save_overlay_colored(orig, class_mask, os.path.join(args.out_dir,"visuals", f"{Path(p).stem}_overlay_{cnt}.png"))
                 cnt += 1
-
-            if cnt >= 200:
+            if cnt >= args.max_overlays:
                 break
-    print("✅ Done. Outputs in:", args.out_dir)
+    print("Done. Outputs:", args.out_dir)
 
-
-# ------------------------------ CLI ------------------------------
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--vowel_root", required=True, type=str)
-    parser.add_argument("--out_dir", default="./modi_matra_only_out", type=str)
-    parser.add_argument("--samples_per_class", default=1000, type=int)
-    parser.add_argument("--img_size", default=320, type=int)
-    parser.add_argument("--batch_size", default=16, type=int)
-    parser.add_argument("--epochs", default=15, type=int)
+    parser.add_argument("--data_root", required=True, type=str)
+    parser.add_argument("--out_dir", default="./modi_matra_out", type=str)
+    parser.add_argument("--samples_per_class", default=None, type=int)
+    parser.add_argument("--img_size", default=384, type=int)
+    parser.add_argument("--batch_size", default=6, type=int)
+    parser.add_argument("--epochs", default=20, type=int)
     parser.add_argument("--lr", default=2e-4, type=float)
     parser.add_argument("--num_workers", default=6, type=int)
-    parser.add_argument("--val_frac", default=0.05, type=float)
-    parser.add_argument("--save_thresh", default=0.4, type=float)
+    parser.add_argument("--val_frac", default=0.06, type=float)
     parser.add_argument("--seed", default=42, type=int)
+    parser.add_argument("--thr", default=0.45, type=float)
+    parser.add_argument("--max_overlays", default=300, type=int)
     args = parser.parse_args()
-
     if args.samples_per_class is not None and args.samples_per_class <= 0:
         args.samples_per_class = None
-
     main(args)
