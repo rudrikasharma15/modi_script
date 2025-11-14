@@ -37,97 +37,69 @@ def ensure_dir(p):
 
 # ---------------- improved auto-labeler ----------------
 def generate_4class_mask_improved(gray):
-    """
-    Input: gray numpy array (H,W) or 3-channel image
-    Output: uint8 mask (H,W) with values {0,1,2,3}
-    """
     if len(gray.shape) == 3:
         gray = cv2.cvtColor(gray, cv2.COLOR_BGR2GRAY)
     h, w = gray.shape
 
-    # basic stroke extraction (strokes -> white)
+    # 1) Stroke extraction
     blur = cv2.GaussianBlur(gray, (3,3), 0)
     _, th = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
     strokes = 255 - th
 
-    # clean small noise but keep thin strokes
-    strokes = cv2.morphologyEx(strokes, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT,(3,3)))
-    strokes = cv2.morphologyEx(strokes, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT,(3,1)))
+    # 2) Strong headline detection
+    long_k = cv2.getStructuringElement(cv2.MORPH_RECT, (w // 3, 3))
+    horiz = cv2.morphologyEx(strokes, cv2.MORPH_CLOSE, long_k)
+    horiz = cv2.morphologyEx(horiz, cv2.MORPH_OPEN, long_k)
 
-    # detect potential headline using horizontal enhancement
-    horiz_k = cv2.getStructuringElement(cv2.MORPH_RECT, (max(3, w//8), 3))
-    horiz = cv2.morphologyEx(strokes, cv2.MORPH_CLOSE, horiz_k)
-    horiz = cv2.morphologyEx(horiz, cv2.MORPH_OPEN, horiz_k)
-
-    n_h, lbl_h, stats_h, cent_h = cv2.connectedComponentsWithStats((horiz>0).astype(np.uint8), connectivity=8)
+    n_h, lbl_h, stats_h, cent_h = cv2.connectedComponentsWithStats((horiz>0).astype(np.uint8), 8)
     headline_y = None
-    best_bw = 0
+    best = 0
     for i in range(1, n_h):
-        x,y,bw,bh,area = stats_h[i]
-        if bw > best_bw and bw > w*0.25 and bh < h*0.2:
-            best_bw = bw
+        x, y, bw, bh, area = stats_h[i]
+        if bw > best:
+            best = bw
             headline_y = int(cent_h[i][1])
 
-    # fallback body band by projection if no headline found
+    # 3) Body band using projection
     proj = np.mean((strokes>0).astype(np.uint8), axis=1)
-    proj_s = cv2.GaussianBlur((proj*255).astype(np.uint8),(11,1),0).astype(np.float32)/255.0
-    proj_thr = max(0.05, proj_s.max()*0.45)
-    rows = np.where(proj_s >= proj_thr)[0]
-    if rows.size>0:
-        b0,b1 = int(rows.min()), int(rows.max())
+    proj_s = cv2.GaussianBlur((proj*255).astype(np.uint8),(9,1),0).astype(np.float32)/255.0
+    thr = proj_s.max() * 0.45
+    rows = np.where(proj_s >= thr)[0]
+
+    if rows.size > 0:
+        b0, b1 = rows.min(), rows.max()
     else:
-        b0,b1 = int(0.35*h), int(0.65*h)
+        b0, b1 = int(0.35*h), int(0.65*h)
 
     if headline_y is not None:
-        band = max(2, int(h*0.08))
+        band = int(h * 0.08)
         body_y0 = max(0, headline_y - band)
-        body_y1 = min(h-1, headline_y + band)
+        body_y1 = min(h - 1, headline_y + band)
     else:
         body_y0, body_y1 = b0, b1
 
-    # connected components on full strokes
-    n, lbl, stats, cents = cv2.connectedComponentsWithStats((strokes>0).astype(np.uint8), connectivity=8)
-    out = np.zeros((h,w), dtype=np.uint8)
+    # 4) Connected components classification
+    n, lbl, stats, cents = cv2.connectedComponentsWithStats((strokes>0).astype(np.uint8), 8)
+    out = np.zeros((h,w), np.uint8)
 
     for i in range(1, n):
         x,y,bw,bh,area = stats[i]
-        if area < 8:
-            # very small: consider inline if overlapping body band modestly
-            coords = np.where(lbl==i)[0]
-            if coords.size>0:
-                overlap = np.mean((coords >= body_y0) & (coords <= body_y1))
-                if overlap > 0.25:
-                    out[lbl==i] = 2
+        if area < 10:
             continue
 
         cx, cy = cents[i]
-        cy = float(cy)
 
-        rows_i = np.unique(np.where(lbl==i)[0])
-        overlap = np.mean((rows_i >= body_y0) & (rows_i <= body_y1)) if rows_i.size>0 else 0.0
-
-        if overlap >= 0.4:
-            cls = 2
+        if cy < body_y0 - h*0.04:
+            cls = 1      # top matra
+        elif cy > body_y1 + h*0.04:
+            cls = 3      # bottom matra
         else:
-            if cy < body_y0 - max(2, int(h*0.04)):
-                cls = 1
-            elif cy > body_y1 + max(2, int(h*0.04)):
-                cls = 3
-            else:
-                cls = 2
+            cls = 2      # inline matra
 
         out[lbl==i] = cls
 
-    # per-class morphological refine
-    for c in (1,2,3):
-        m = (out==c).astype(np.uint8)*255
-        if m.sum()==0:
-            continue
-        m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_RECT,(5,1)))
-        m = cv2.morphologyEx(m, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_RECT,(3,3)))
-        out[m>0] = c
-
     return out
+
 
 # ---------------- strict post-classifier for overlays ----------------
 def classify_components_strict(mask_bin, orig_gray):
