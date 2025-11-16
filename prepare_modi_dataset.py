@@ -20,8 +20,8 @@ import json
 
 # Matra type mapping for reference during annotation
 MATRA_REFERENCE = {
-    'top_matra': ['i', 'e', 'ai', 'nm', 'am'],  # Appears above
-    'side_matra': ['aa', 'o', 'au', 'ahaa', 'aha', 'ah'],  # Appears on side
+    'top_matra': ['i', 'e', 'ai', 'n', 'm', 'am', 'nm'],  # Appears above
+    'side_matra': ['aa', 'o', 'au', 'ao', 'aha', 'ahaa'],  # Appears on side
     'bottom_matra': ['u', 'uu'],  # Appears below
 }
 
@@ -173,10 +173,10 @@ def prepare_dataset(data_root, out_dir, train_split=0.85, sample_size=None):
                 print(f"Error copying {src}: {e}")
     
     # Save metadata
-    with open(out_dir / 'metadata.json', 'w') as f:
+    with open(out_dir / 'metadata.json', 'w', encoding='utf-8') as f:
         json.dump(metadata, f, indent=2)
     
-    # Create annotation guide
+    # Create annotation guide (with UTF-8 encoding fix)
     guide_content = f"""# Modi Matra Annotation Guide
 
 ## Dataset Information
@@ -300,7 +300,7 @@ Once you've annotated all images:
 - Review your first 20-30 annotations before continuing
 """
     
-    with open(out_dir / 'ANNOTATION_GUIDE.md', 'w') as f:
+    with open(out_dir / 'ANNOTATION_GUIDE.md', 'w', encoding='utf-8') as f:
         f.write(guide_content)
     
     # Create classes.txt for LabelImg

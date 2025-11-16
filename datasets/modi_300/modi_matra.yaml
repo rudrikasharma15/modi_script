@@ -1,0 +1,13 @@
+# Modi Matra Detection Dataset
+path: /Users/applemaair/Desktop/modi/modi_script/datasets/modi_300
+train: images/train
+val: images/val
+
+# Classes
+nc: 3
+names: ['top_matra', 'side_matra', 'bottom_matra']
+
+# Dataset statistics
+# Total annotated: 129
+# Train: 109 images
+# Val: 20 images
