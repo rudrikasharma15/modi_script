@@ -1,0 +1,30 @@
+# Modi Matra Detection Dataset Configuration
+
+# Dataset paths
+path: /Users/applemaair/Desktop/modi/modi_script/datasets/modi_side_boost
+train: images/train
+val: images/val
+test: images/test
+
+# Classes
+names:
+  0: top_matra
+  1: side_matra
+  2: bottom_matra
+
+# Class descriptions
+descriptions:
+  top_matra: "Matra marks appearing above the base character (i, e, ai, anusvara)"
+  side_matra: "Matra marks appearing on the right side (aa, o, au, visarga)"
+  bottom_matra: "Matra marks appearing below the base character (u, uu)"
+
+# Dataset statistics
+total_images: 85
+train_images: 59
+val_images: 12
+test_images: 14
+
+# Split ratios
+train_ratio: 0.7
+val_ratio: 0.15
+test_ratio: 0.15
