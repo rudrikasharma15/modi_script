@@ -1,0 +1,26 @@
+{
+  "version": "5.0.1",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "top_matra",
+      "points": [
+        [
+          18.725157000000003,
+          8.012141999999999
+        ],
+        [
+          60.564933,
+          36.136082
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    }
+  ],
+  "imagePath": "WhatsApp Image 2021-08-23 at 11.59.27 AM_48.png",
+  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAGMAAABcCAAAAABffFQxAAAB8ElEQVRoBbXBAWLiOADAQOn/j9YRtt1LwQG7i2ckdpPYTWI3id2Mf2W8JiQngdzFhxjbGduZsZkZT4wPMuOJxOeY8USIjzEGhPgYY0SITzFGBOJDzBgQ4kPMGBHiM8wYEmJEYokZQwLxTIglxhW5iUdCLDGuyU38IBBLjBfkJk7kJpYYL8lN/E9uYoXxmhziixxihcQbcog7OcQKibfkEDdyiBUSE+Qu5BArJKbISayQmCXfYoXEPLmLJRJLBGKJxBqBWCGxSIgVEquEWCCxSiDmSQzIgzgRiGkSX2RNTJIA+YAMiScSN3ISf8khfpC34sQ4kTiRmxiSQ3yRsziTuCTEBTnEgMSZxBUhrggxZvwgcUGIS0LMkbggcU2IORJjQlwTYo7EmMQLQsyRGJN4QWKSxJhAXJKYJHFB7mJIYpLEFfkrHklMMl6RJ3EnMcl4S54kxCSJd+RCTJF4x0CIL/ItZhhzJE7kLiYYcyTO5BATjClCnMkhJhhjQvxPiB/kEO8ZI/JH/CHEA7mJ94wR+RY3QjwSiAnGiDyIAWOGMSI3ybf4B8aY/BC/Z1yQu5BD/JoxQSB+y5ghxG8Z2xnbGdsZ2xnbGdsZ2xnbGdsZ2xnbGdsZ2xnbGdsZ2xnbGdsZ2xnbGdsZ2xnbGdsZ2xnb/QeMf84BuZzg5AAAAABJRU5ErkJggg==",
+  "imageHeight": 92,
+  "imageWidth": 99
+}

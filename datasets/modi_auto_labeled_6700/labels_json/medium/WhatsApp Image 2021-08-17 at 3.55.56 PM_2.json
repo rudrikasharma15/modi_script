@@ -1,0 +1,58 @@
+{
+  "version": "5.0.1",
+  "flags": {},
+  "shapes": [
+    {
+      "label": "side_matra",
+      "points": [
+        [
+          74.390209,
+          57.781773
+        ],
+        [
+          78.192759,
+          61.902603
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    },
+    {
+      "label": "side_matra",
+      "points": [
+        [
+          73.704393,
+          41.119280999999994
+        ],
+        [
+          76.32859499999999,
+          44.688230999999995
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    },
+    {
+      "label": "side_matra",
+      "points": [
+        [
+          72.880812,
+          41.076063
+        ],
+        [
+          76.434972,
+          45.542133
+        ]
+      ],
+      "group_id": null,
+      "shape_type": "rectangle",
+      "flags": {}
+    }
+  ],
+  "imagePath": "WhatsApp Image 2021-08-17 at 3.55.56 PM_2.png",
+  "imageData": "iVBORw0KGgoAAAANSUhEUgAAAHYAAAB+CAAAAADUn7qgAAAB0UlEQVRoBcXBC24aWAAEwe77H7pXwR+BY8MLWDtVxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMYz5Fr8I41j8r34VxqPyU/iKRqPyJX4IBBXJA5p3Ce34o0Q14Q4pHGXQHySuBCIaxKnNO4S4htC3JA4pXGXEH8TiBsSpzTukj/ilkA8T+M+eRefBOIFGg/JRXwQiBdonBHinRCv0DgjxBshXqJxRog3QrxE44wQF3IRz9P4mcQHIUA+xdM0fiBv4kII5CKEeJrG9+RDgNwIIZ6m8QP5It4JCfE0jfvkTXySQOJpGg8IxDUJIb4Q4ojGI0Jck4v4QogjGg9JXJM/4iuJMxoPCXFNiL8IcUbjMYkDEmc0HhPiN2kcEOIXaRyR+D0aAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoDGgMaAxoLxoDGgMaAxoDGgMbvkVPyf0vAGNBYMAb8D+C9wX1zBi7eAAAAAElFTkSuQmCC",
+  "imageHeight": 126,
+  "imageWidth": 118
+}

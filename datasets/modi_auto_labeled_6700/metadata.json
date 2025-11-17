@@ -1,0 +1,17 @@
+{
+  "model_used": "runs/modi_matra/train2/weights/best.pt",
+  "images_processed": 7223,
+  "excluded_already_labeled": 0,
+  "confidence_distribution": {
+    "high": 2841,
+    "medium": 1993,
+    "low": 846,
+    "none": 1543
+  },
+  "time_analysis": {
+    "if_all_manual_hours": 60.2,
+    "with_semi_supervised_hours": 25.4,
+    "time_saved_hours": 34.7,
+    "efficiency_gain_percent": 57.7
+  }
+}

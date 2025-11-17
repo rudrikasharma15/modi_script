@@ -1,89 +1,85 @@
 #!/usr/bin/env python3
 """
-auto_label_full_dataset.py
-Automatically label ALL remaining 6,700 images using trained model.
-Separates by confidence level for different workflows.
-
-Usage:
-    python auto_label_full_dataset.py \
-        --model runs/modi_matra/train2/weights/best.pt \
-        --data_root "/Users/applemaair/Downloads/Dataset_Modi/Dataset_Modi" \
-        --output datasets/modi_auto_labeled \
-        --already_used datasets/modi_300_final/metadata.json
+Auto-label remaining unlabeled images using trained model.
+Excludes images already used in training/validation.
 """
 import argparse
+import json
 from pathlib import Path
 from ultralytics import YOLO
 from tqdm import tqdm
 import shutil
-import json
-import cv2
 
-def load_already_used_images(metadata_path):
-    """Load list of images already used in training."""
-    if not metadata_path or not Path(metadata_path).exists():
-        return set()
-    
-    with open(metadata_path) as f:
-        metadata = json.load(f)
-    
+def load_used_images(dataset_dir):
+    """Load list of images already used in training/validation."""
     used_images = set()
-    if 'images' in metadata:
-        for img_info in metadata['images']:
-            used_images.add(Path(img_info['path']).name)
+    dataset_path = Path(dataset_dir)
     
+    # Check for images in train/val folders
+    for split in ['train', 'val']:
+        img_dir = dataset_path / 'images' / split
+        if img_dir.exists():
+            for img in img_dir.iterdir():
+                if img.suffix.lower() in ['.png', '.jpg', '.jpeg']:
+                    used_images.add(img.name)
+    
+    # Also check labels directory
+    for split in ['train', 'val']:
+        label_dir = dataset_path / 'labels' / split
+        if label_dir.exists():
+            for label in label_dir.iterdir():
+                if label.suffix == '.txt':
+                    # Add corresponding image names with all possible extensions
+                    stem = label.stem
+                    used_images.add(f"{stem}.png")
+                    used_images.add(f"{stem}.jpg")
+                    used_images.add(f"{stem}.jpeg")
+    
+    print(f"✓ Found {len(used_images)} already-labeled images to exclude")
     return used_images
 
-def auto_label_dataset(model_path, data_root, output_dir, already_used_path=None):
-    """Auto-label all images with confidence-based separation."""
+def auto_label_dataset(model_path, data_root, output_dir, already_used_dir):
+    """Auto-label remaining unlabeled images."""
     
     data_root = Path(data_root)
     output_dir = Path(output_dir)
     
-    # Create output structure
+    # Load already-used images
+    used_images = load_used_images(already_used_dir)
+    
+    # Create output directories
     for conf_level in ['high', 'medium', 'low', 'none']:
         (output_dir / 'images' / conf_level).mkdir(parents=True, exist_ok=True)
         (output_dir / 'labels' / conf_level).mkdir(parents=True, exist_ok=True)
     
-    print("Loading trained model...")
+    # Load model
+    print(f"\n📦 Loading model: {model_path}")
     model = YOLO(model_path)
     
-    # Get already used images
-    print("Loading list of already-used images...")
-    used_images = load_already_used_images(already_used_path)
-    print(f"  Found {len(used_images)} images already in training set")
-    
-    # Find all images
-    print("Scanning for images...")
+    # Find all images recursively
+    print(f"\n🔍 Scanning {data_root} for images...")
     all_images = []
-    for pattern in ['*.png', '*.jpg', '*.jpeg']:
-        all_images.extend(data_root.rglob(pattern))
+    for ext in ['*.png', '*.jpg', '*.jpeg', '*.PNG', '*.JPG', '*.JPEG']:
+        all_images.extend(list(data_root.rglob(ext)))
     
-    # Filter out already used
+    print(f"✓ Found {len(all_images)} total images")
+    
+    # Filter out already-used images
     new_images = [img for img in all_images if img.name not in used_images]
     
-    print(f"\nDataset Statistics:")
-    print(f"  Total images found: {len(all_images)}")
-    print(f"  Already used (training): {len(used_images)}")
-    print(f"  New images to label: {len(new_images)}")
+    print(f"✓ Excluding {len(all_images) - len(new_images)} already-labeled images")
+    print(f"✓ Processing {len(new_images)} NEW images\n")
     
-    # Process images
-    print(f"\nProcessing {len(new_images)} images...")
+    if len(new_images) == 0:
+        print("❌ No new images to process!")
+        return
     
-    stats = {
-        'high': 0,    # conf > 0.8 - auto-label directly
-        'medium': 0,  # 0.5 < conf < 0.8 - quick review needed
-        'low': 0,     # 0.25 < conf < 0.5 - manual annotation needed
-        'none': 0     # conf < 0.25 - no detection
-    }
+    # Counters
+    counts = {'high': 0, 'medium': 0, 'low': 0, 'none': 0}
     
-    for img_path in tqdm(new_images, desc="Auto-labeling"):
+    print("🚀 Auto-labeling images...")
+    for img_path in tqdm(new_images):
         try:
-            # Read image
-            img = cv2.imread(str(img_path))
-            if img is None:
-                continue
-            
             # Run inference
             results = model.predict(img_path, conf=0.25, verbose=False)
             
@@ -100,93 +96,92 @@ def auto_label_dataset(model_path, data_root, output_dir, already_used_path=None
                     conf_level = 'high'
                 elif max_conf >= 0.5:
                     conf_level = 'medium'
-                else:
+                elif max_conf >= 0.25:
                     conf_level = 'low'
+                else:
+                    conf_level = 'none'
             
             # Copy image
             dst_img = output_dir / 'images' / conf_level / img_path.name
-            shutil.copy(img_path, dst_img)
+            shutil.copy2(img_path, dst_img)
             
             # Save labels (if any detections)
-            if conf_level != 'none':
+            if conf_level != 'none' and len(results[0].boxes) > 0:
                 dst_label = output_dir / 'labels' / conf_level / (img_path.stem + '.txt')
                 with open(dst_label, 'w') as f:
-                    boxes = results[0].boxes
-                    for box in boxes:
+                    for box in results[0].boxes:
                         cls = int(box.cls[0])
                         xywhn = box.xywhn[0].cpu().numpy()
+                        conf = float(box.conf[0])
                         f.write(f"{cls} {xywhn[0]:.6f} {xywhn[1]:.6f} {xywhn[2]:.6f} {xywhn[3]:.6f}\n")
             
-            stats[conf_level] += 1
+            counts[conf_level] += 1
             
         except Exception as e:
-            print(f"\nError processing {img_path.name}: {e}")
+            print(f"\n⚠️  Error processing {img_path.name}: {e}")
             continue
     
-    # Print results
-    print("\n" + "="*70)
-    print("AUTO-LABELING COMPLETE!")
-    print("="*70)
-    print(f"\nResults by confidence level:")
-    print(f"  HIGH (>0.8):    {stats['high']:>5} images  ✅ Use directly (no review)")
-    print(f"  MEDIUM (0.5-0.8): {stats['medium']:>5} images  ⚠️  Quick review (5-10 sec/image)")
-    print(f"  LOW (0.25-0.5):   {stats['low']:>5} images  ❌ Manual annotation needed")
-    print(f"  NONE (<0.25):     {stats['none']:>5} images  ❌ Manual annotation needed")
-    print(f"\n  TOTAL PROCESSED: {sum(stats.values())} images")
-    
     # Calculate time savings
-    high_saved_time = stats['high'] * 60  # 60 sec per manual annotation
-    medium_time = stats['medium'] * 10    # 10 sec for quick review
-    low_time = (stats['low'] + stats['none']) * 60  # Full annotation
+    total_processed = sum(counts.values())
+    manual_time_hours = total_processed * 30 / 3600  # 30 sec per image
+    high_auto_time = counts['high'] * 0  # No time needed
+    medium_review_time = counts['medium'] * 10 / 3600  # 10 sec per image
+    low_manual_time = counts['low'] * 30 / 3600  # Full annotation
+    none_manual_time = counts['none'] * 30 / 3600  # Full annotation
     
-    print(f"\nTime Estimation:")
-    print(f"  If fully manual: {sum(stats.values()) * 60 / 3600:.1f} hours")
-    print(f"  With auto-labeling: {(medium_time + low_time) / 3600:.1f} hours")
-    print(f"  TIME SAVED: {high_saved_time / 3600:.1f} hours! 🎉")
+    actual_time_hours = high_auto_time + medium_review_time + low_manual_time + none_manual_time
+    time_saved = manual_time_hours - actual_time_hours
     
-    print(f"\n{'='*70}")
-    print("NEXT STEPS:")
-    print("="*70)
-    print("1. HIGH confidence images:")
-    print(f"   → Use directly for training (already at {output_dir}/labels/high/)")
-    print("\n2. MEDIUM confidence images:")
-    print(f"   → Quick review needed:")
-    print(f"      labelme {output_dir}/images/medium \\")
-    print(f"          --labels labels.txt \\")
-    print(f"          --output {output_dir}/labels_json/medium")
-    print("\n3. LOW/NONE confidence images:")
-    print(f"   → Full manual annotation:")
-    print(f"      labelme {output_dir}/images/low \\")
-    print(f"          --labels labels.txt \\")
-    print(f"          --output {output_dir}/labels_json/low")
-    print("\n4. Combine all and retrain:")
-    print("   → Merge high + reviewed medium + annotated low")
-    print("   → Total dataset: 217 + new images")
-    print("   → Expected performance boost: +3-7% mAP")
-    print("="*70)
+    # Save metadata
+    metadata = {
+        'model_used': str(model_path),
+        'images_processed': total_processed,
+        'excluded_already_labeled': len(all_images) - len(new_images),
+        'confidence_distribution': counts,
+        'time_analysis': {
+            'if_all_manual_hours': round(manual_time_hours, 1),
+            'with_semi_supervised_hours': round(actual_time_hours, 1),
+            'time_saved_hours': round(time_saved, 1),
+            'efficiency_gain_percent': round((time_saved / manual_time_hours * 100), 1) if manual_time_hours > 0 else 0
+        }
+    }
     
-    # Save statistics
-    stats_file = output_dir / 'auto_label_stats.json'
-    with open(stats_file, 'w') as f:
-        json.dump({
-            'total_processed': sum(stats.values()),
-            'confidence_distribution': stats,
-            'time_saved_hours': high_saved_time / 3600,
-            'remaining_work_hours': (medium_time + low_time) / 3600
-        }, f, indent=2)
+    with open(output_dir / 'metadata.json', 'w') as f:
+        json.dump(metadata, f, indent=2)
     
-    print(f"\nStatistics saved to: {stats_file}")
+    # Print results
+    print("\n" + "="*60)
+    print("🎉 AUTO-LABELING COMPLETE!")
+    print("="*60)
+    print(f"\n📊 Results by confidence level:")
+    print(f"  ✅ HIGH (>0.8):     {counts['high']:,} images  → Use directly")
+    print(f"  ⚠️  MEDIUM (0.5-0.8): {counts['medium']:,} images  → Quick review")
+    print(f"  ❌ LOW (0.25-0.5):   {counts['low']:,} images  → Manual work")
+    print(f"  ❌ NONE (<0.25):     {counts['none']:,} images  → Manual work")
+    print(f"\n📁 Total processed: {total_processed:,} NEW images")
+    print(f"🚫 Excluded (already labeled): {len(all_images) - len(new_images):,} images")
+    
+    print(f"\n⏱️  TIME ANALYSIS:")
+    print(f"  If all manual:        {manual_time_hours:.1f} hours")
+    print(f"  With semi-supervised: {actual_time_hours:.1f} hours")
+    print(f"  TIME SAVED:           {time_saved:.1f} hours ({metadata['time_analysis']['efficiency_gain_percent']:.0f}% reduction) 🎉")
+    
+    print(f"\n📝 NEXT STEPS:")
+    print(f"  1. HIGH: Use directly for training ({counts['high']:,} images)")
+    print(f"  2. MEDIUM: Quick review in labelme ({medium_review_time:.1f} hours)")
+    print(f"  3. LOW/NONE: Manual annotation or skip for now ({low_manual_time + none_manual_time:.1f} hours)")
+    
+    print(f"\n💾 Output saved to: {output_dir}")
+    print(f"📄 Metadata saved to: {output_dir / 'metadata.json'}")
+    print("="*60 + "\n")
 
-def main():
-    parser = argparse.ArgumentParser(description='Auto-label full dataset with confidence separation')
-    parser.add_argument('--model', required=True, help='Path to trained model (.pt)')
-    parser.add_argument('--data_root', required=True, help='Root directory with all 7K images')
-    parser.add_argument('--output', required=True, help='Output directory for auto-labeled data')
-    parser.add_argument('--already_used', help='Path to metadata.json of already-used images')
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Auto-label remaining unlabeled images')
+    parser.add_argument('--model', required=True, help='Path to trained model (.pt file)')
+    parser.add_argument('--data_root', required=True, help='Root directory of all Modi images')
+    parser.add_argument('--output', required=True, help='Output directory for auto-labeled images')
+    parser.add_argument('--already_used', required=True, help='Directory of already-labeled dataset')
     
     args = parser.parse_args()
     
     auto_label_dataset(args.model, args.data_root, args.output, args.already_used)
-
-if __name__ == '__main__':
-    main()
