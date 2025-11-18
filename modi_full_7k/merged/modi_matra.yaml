@@ -1,0 +1,10 @@
+names:
+  0: top_matra
+  1: side_matra
+  2: bottom_matra
+
+path: C:\Users\admin\Desktop\modi script\modi_script\modi_full_7k\merged
+
+train: images/train
+val: images/val
+test: images/test
