@@ -2,7 +2,7 @@ names:
   0: top_matra
   1: side_matra
   2: bottom_matra
-path: /Users/applemaair/Desktop/modi/modi_script/datasets/modi_combined_5000
+path: C:\Users\admin\Desktop\modi script\modi_script\datasets\modi_combined_5000
 test: images/test
 train: images/train
 val: images/val

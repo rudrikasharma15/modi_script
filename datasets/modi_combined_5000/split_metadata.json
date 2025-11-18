@@ -1,11 +1,11 @@
 {
-  "total_images": 5125,
-  "train": 3495,
-  "val": 748,
-  "test": 752,
+  "total_images": 4373,
+  "train": 2969,
+  "val": 634,
+  "test": 640,
   "class_distribution": {
-    "top_matra": 4055,
-    "side_matra": 338,
-    "bottom_matra": 602
+    "top_matra": 3446,
+    "side_matra": 286,
+    "bottom_matra": 511
   }
 }
