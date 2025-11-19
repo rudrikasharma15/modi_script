@@ -1,0 +1,14 @@
+{
+  "summary": {
+    "total_images": 0,
+    "detection_rate": "0.0%",
+    "total_detections": 0
+  },
+  "per_class": {
+    "top_matra": 0,
+    "side_matra": 0,
+    "bottom_matra": 0
+  },
+  "failed_images": [],
+  "successful_images": []
+}

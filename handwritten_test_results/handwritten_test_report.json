@@ -1,0 +1,1066 @@
+{
+  "model": "runs/modi_matra/train_full_7k2/weights/best.pt",
+  "samples_directory": "datasets/handwritten_images",
+  "total_images": 61,
+  "successful_detections": 47,
+  "failed_detections": 14,
+  "success_rate": 77.04918032786885,
+  "detections_by_class": {
+    "bottom_matra": 11,
+    "side_matra": 10,
+    "top_matra": 42
+  },
+  "detections_by_size": {
+    "unknown": 63
+  },
+  "average_confidences": {
+    "bottom_matra": 0.8220747194506905,
+    "side_matra": 0.43966554701328275,
+    "top_matra": 0.8141544808944067
+  },
+  "detailed_results": [
+    {
+      "image": "13.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.9186323285102844,
+          "bbox": [
+            42,
+            39,
+            57,
+            52
+          ]
+        },
+        {
+          "class": "side_matra",
+          "confidence": 0.7093883752822876,
+          "bbox": [
+            0,
+            41,
+            2,
+            46
+          ]
+        }
+      ]
+    },
+    {
+      "image": "14.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.9449598789215088,
+          "bbox": [
+            40,
+            38,
+            57,
+            51
+          ]
+        },
+        {
+          "class": "bottom_matra",
+          "confidence": 0.854487419128418,
+          "bbox": [
+            35,
+            0,
+            57,
+            6
+          ]
+        }
+      ]
+    },
+    {
+      "image": "15.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9342061877250671,
+          "bbox": [
+            44,
+            14,
+            57,
+            22
+          ]
+        }
+      ]
+    },
+    {
+      "image": "16.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9382200837135315,
+          "bbox": [
+            33,
+            13,
+            48,
+            23
+          ]
+        }
+      ]
+    },
+    {
+      "image": "17.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.6479634046554565,
+          "bbox": [
+            0,
+            0,
+            4,
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "image": "18.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "21.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.8862689137458801,
+          "bbox": [
+            45,
+            6,
+            57,
+            14
+          ]
+        },
+        {
+          "class": "bottom_matra",
+          "confidence": 0.7438944578170776,
+          "bbox": [
+            0,
+            47,
+            16,
+            57
+          ]
+        }
+      ]
+    },
+    {
+      "image": "22.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.4580025374889374,
+          "bbox": [
+            36,
+            43,
+            58,
+            58
+          ]
+        }
+      ]
+    },
+    {
+      "image": "23.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.8954350352287292,
+          "bbox": [
+            31,
+            45,
+            58,
+            58
+          ]
+        },
+        {
+          "class": "top_matra",
+          "confidence": 0.8943158984184265,
+          "bbox": [
+            25,
+            0,
+            39,
+            7
+          ]
+        },
+        {
+          "class": "bottom_matra",
+          "confidence": 0.5813997983932495,
+          "bbox": [
+            27,
+            0,
+            55,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "image": "24.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9305798411369324,
+          "bbox": [
+            35,
+            6,
+            51,
+            16
+          ]
+        },
+        {
+          "class": "side_matra",
+          "confidence": 0.40341079235076904,
+          "bbox": [
+            52,
+            17,
+            57,
+            45
+          ]
+        }
+      ]
+    },
+    {
+      "image": "25.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.8890255689620972,
+          "bbox": [
+            12,
+            6,
+            45,
+            16
+          ]
+        }
+      ]
+    },
+    {
+      "image": "26.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "side_matra",
+          "confidence": 0.6740473508834839,
+          "bbox": [
+            43,
+            19,
+            48,
+            50
+          ]
+        }
+      ]
+    },
+    {
+      "image": "27.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.46332529187202454,
+          "bbox": [
+            31,
+            0,
+            36,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "image": "30.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9443780183792114,
+          "bbox": [
+            37,
+            7,
+            57,
+            18
+          ]
+        },
+        {
+          "class": "top_matra",
+          "confidence": 0.41393131017684937,
+          "bbox": [
+            7,
+            0,
+            10,
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "image": "31.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "32.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.9235705137252808,
+          "bbox": [
+            24,
+            46,
+            57,
+            58
+          ]
+        },
+        {
+          "class": "side_matra",
+          "confidence": 0.4073343276977539,
+          "bbox": [
+            24,
+            55,
+            28,
+            58
+          ]
+        }
+      ]
+    },
+    {
+      "image": "33.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.931620180606842,
+          "bbox": [
+            41,
+            9,
+            56,
+            18
+          ]
+        }
+      ]
+    },
+    {
+      "image": "34.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9424457550048828,
+          "bbox": [
+            33,
+            9,
+            48,
+            19
+          ]
+        },
+        {
+          "class": "top_matra",
+          "confidence": 0.2741050720214844,
+          "bbox": [
+            0,
+            0,
+            6,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "image": "35.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "36.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "37.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.8253353834152222,
+          "bbox": [
+            0,
+            2,
+            7,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "image": "38.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.5884133577346802,
+          "bbox": [
+            41,
+            1,
+            58,
+            11
+          ]
+        },
+        {
+          "class": "side_matra",
+          "confidence": 0.33303114771842957,
+          "bbox": [
+            0,
+            12,
+            5,
+            44
+          ]
+        }
+      ]
+    },
+    {
+      "image": "39.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9306753873825073,
+          "bbox": [
+            37,
+            2,
+            54,
+            12
+          ]
+        },
+        {
+          "class": "top_matra",
+          "confidence": 0.8915529251098633,
+          "bbox": [
+            0,
+            47,
+            11,
+            57
+          ]
+        }
+      ]
+    },
+    {
+      "image": "40.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "41.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.8555107712745667,
+          "bbox": [
+            25,
+            44,
+            54,
+            57
+          ]
+        }
+      ]
+    },
+    {
+      "image": "42.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9438498616218567,
+          "bbox": [
+            42,
+            5,
+            56,
+            14
+          ]
+        }
+      ]
+    },
+    {
+      "image": "43.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.8937170505523682,
+          "bbox": [
+            16,
+            3,
+            53,
+            14
+          ]
+        }
+      ]
+    },
+    {
+      "image": "44.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "side_matra",
+          "confidence": 0.5556921362876892,
+          "bbox": [
+            45,
+            16,
+            49,
+            47
+          ]
+        }
+      ]
+    },
+    {
+      "image": "45.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "47.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9276130795478821,
+          "bbox": [
+            0,
+            3,
+            8,
+            12
+          ]
+        },
+        {
+          "class": "top_matra",
+          "confidence": 0.7144829034805298,
+          "bbox": [
+            52,
+            0,
+            58,
+            5
+          ]
+        }
+      ]
+    },
+    {
+      "image": "48.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.5972320437431335,
+          "bbox": [
+            48,
+            0,
+            58,
+            12
+          ]
+        }
+      ]
+    },
+    {
+      "image": "49.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9205213785171509,
+          "bbox": [
+            26,
+            7,
+            43,
+            13
+          ]
+        }
+      ]
+    },
+    {
+      "image": "50.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "51.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9394622445106506,
+          "bbox": [
+            38,
+            6,
+            52,
+            14
+          ]
+        }
+      ]
+    },
+    {
+      "image": "52.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9345905184745789,
+          "bbox": [
+            34,
+            4,
+            50,
+            14
+          ]
+        }
+      ]
+    },
+    {
+      "image": "53.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.788468062877655,
+          "bbox": [
+            9,
+            9,
+            20,
+            15
+          ]
+        }
+      ]
+    },
+    {
+      "image": "54.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.39836224913597107,
+          "bbox": [
+            7,
+            9,
+            20,
+            16
+          ]
+        }
+      ]
+    },
+    {
+      "image": "55.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.8494768738746643,
+          "bbox": [
+            0,
+            0,
+            12,
+            8
+          ]
+        },
+        {
+          "class": "top_matra",
+          "confidence": 0.7816444039344788,
+          "bbox": [
+            56,
+            0,
+            57,
+            2
+          ]
+        }
+      ]
+    },
+    {
+      "image": "56.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9318907856941223,
+          "bbox": [
+            46,
+            0,
+            57,
+            9
+          ]
+        }
+      ]
+    },
+    {
+      "image": "57.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9361411333084106,
+          "bbox": [
+            41,
+            0,
+            57,
+            10
+          ]
+        },
+        {
+          "class": "side_matra",
+          "confidence": 0.29279348254203796,
+          "bbox": [
+            49,
+            56,
+            53,
+            58
+          ]
+        }
+      ]
+    },
+    {
+      "image": "58.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "59.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.9221280217170715,
+          "bbox": [
+            28,
+            41,
+            57,
+            57
+          ]
+        }
+      ]
+    },
+    {
+      "image": "60.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9321771264076233,
+          "bbox": [
+            37,
+            2,
+            55,
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "image": "61.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9135004281997681,
+          "bbox": [
+            15,
+            1,
+            49,
+            11
+          ]
+        }
+      ]
+    },
+    {
+      "image": "62.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "side_matra",
+          "confidence": 0.4996804893016815,
+          "bbox": [
+            48,
+            15,
+            52,
+            43
+          ]
+        }
+      ]
+    },
+    {
+      "image": "63.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "66.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.540817141532898,
+          "bbox": [
+            39,
+            0,
+            56,
+            8
+          ]
+        }
+      ]
+    },
+    {
+      "image": "67.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.921011745929718,
+          "bbox": [
+            25,
+            4,
+            40,
+            9
+          ]
+        },
+        {
+          "class": "side_matra",
+          "confidence": 0.26880088448524475,
+          "bbox": [
+            0,
+            33,
+            4,
+            38
+          ]
+        }
+      ]
+    },
+    {
+      "image": "68.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "69.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9298485517501831,
+          "bbox": [
+            43,
+            0,
+            57,
+            9
+          ]
+        }
+      ]
+    },
+    {
+      "image": "70.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.940237283706665,
+          "bbox": [
+            40,
+            2,
+            54,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "image": "71.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "72.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "74.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.905777096748352,
+          "bbox": [
+            32,
+            0,
+            55,
+            7
+          ]
+        }
+      ]
+    },
+    {
+      "image": "75.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9029001593589783,
+          "bbox": [
+            30,
+            0,
+            44,
+            8
+          ]
+        },
+        {
+          "class": "top_matra",
+          "confidence": 0.47816863656044006,
+          "bbox": [
+            42,
+            54,
+            49,
+            57
+          ]
+        }
+      ]
+    },
+    {
+      "image": "76.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    },
+    {
+      "image": "77.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "bottom_matra",
+          "confidence": 0.9448011517524719,
+          "bbox": [
+            24,
+            41,
+            42,
+            54
+          ]
+        }
+      ]
+    },
+    {
+      "image": "78.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9284756779670715,
+          "bbox": [
+            30,
+            2,
+            50,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "image": "79.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "top_matra",
+          "confidence": 0.9177591800689697,
+          "bbox": [
+            4,
+            1,
+            29,
+            10
+          ]
+        }
+      ]
+    },
+    {
+      "image": "80.png",
+      "size": "unknown",
+      "detected": true,
+      "detections": [
+        {
+          "class": "side_matra",
+          "confidence": 0.2524764835834503,
+          "bbox": [
+            40,
+            12,
+            43,
+            41
+          ]
+        }
+      ]
+    },
+    {
+      "image": "81.png",
+      "size": "unknown",
+      "detected": false,
+      "detections": []
+    }
+  ]
+}
