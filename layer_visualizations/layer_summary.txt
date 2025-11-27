@@ -1,0 +1,292 @@
+================================================================================
+YOLO MODEL LAYER-BY-LAYER SUMMARY
+================================================================================
+
+Layer: Layer_3_model.0.conv
+  Shape: torch.Size([1, 16, 320, 304])
+  Channels: 16, Size: 320x304
+
+Layer: Layer_5_model.0.act
+  Shape: torch.Size([1, 64, 20, 19])
+  Channels: 64, Size: 20x19
+
+Layer: Layer_7_model.1.conv
+  Shape: torch.Size([1, 32, 160, 152])
+  Channels: 32, Size: 160x152
+
+Layer: Layer_11_model.2.cv1.conv
+  Shape: torch.Size([1, 32, 160, 152])
+  Channels: 32, Size: 160x152
+
+Layer: Layer_19_model.2.m.0.cv1.conv
+  Shape: torch.Size([1, 16, 160, 152])
+  Channels: 16, Size: 160x152
+
+Layer: Layer_22_model.2.m.0.cv2.conv
+  Shape: torch.Size([1, 16, 160, 152])
+  Channels: 16, Size: 160x152
+
+Layer: Layer_14_model.2.cv2.conv
+  Shape: torch.Size([1, 32, 160, 152])
+  Channels: 32, Size: 160x152
+
+Layer: Layer_25_model.3.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_29_model.4.cv1.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_37_model.4.m.0.cv1.conv
+  Shape: torch.Size([1, 32, 80, 76])
+  Channels: 32, Size: 80x76
+
+Layer: Layer_40_model.4.m.0.cv2.conv
+  Shape: torch.Size([1, 32, 80, 76])
+  Channels: 32, Size: 80x76
+
+Layer: Layer_44_model.4.m.1.cv1.conv
+  Shape: torch.Size([1, 32, 80, 76])
+  Channels: 32, Size: 80x76
+
+Layer: Layer_47_model.4.m.1.cv2.conv
+  Shape: torch.Size([1, 32, 80, 76])
+  Channels: 32, Size: 80x76
+
+Layer: Layer_32_model.4.cv2.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_50_model.5.conv
+  Shape: torch.Size([1, 128, 40, 38])
+  Channels: 128, Size: 40x38
+
+Layer: Layer_54_model.6.cv1.conv
+  Shape: torch.Size([1, 128, 40, 38])
+  Channels: 128, Size: 40x38
+
+Layer: Layer_62_model.6.m.0.cv1.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_65_model.6.m.0.cv2.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_69_model.6.m.1.cv1.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_72_model.6.m.1.cv2.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_57_model.6.cv2.conv
+  Shape: torch.Size([1, 128, 40, 38])
+  Channels: 128, Size: 40x38
+
+Layer: Layer_75_model.7.conv
+  Shape: torch.Size([1, 256, 20, 19])
+  Channels: 256, Size: 20x19
+
+Layer: Layer_79_model.8.cv1.conv
+  Shape: torch.Size([1, 256, 20, 19])
+  Channels: 256, Size: 20x19
+
+Layer: Layer_87_model.8.m.0.cv1.conv
+  Shape: torch.Size([1, 128, 20, 19])
+  Channels: 128, Size: 20x19
+
+Layer: Layer_90_model.8.m.0.cv2.conv
+  Shape: torch.Size([1, 128, 20, 19])
+  Channels: 128, Size: 20x19
+
+Layer: Layer_82_model.8.cv2.conv
+  Shape: torch.Size([1, 256, 20, 19])
+  Channels: 256, Size: 20x19
+
+Layer: Layer_94_model.9.cv1.conv
+  Shape: torch.Size([1, 128, 20, 19])
+  Channels: 128, Size: 20x19
+
+Layer: Layer_99_model.9.m
+  Shape: torch.Size([1, 128, 20, 19])
+  Channels: 128, Size: 20x19
+
+Layer: Layer_97_model.9.cv2.conv
+  Shape: torch.Size([1, 256, 20, 19])
+  Channels: 256, Size: 20x19
+
+Layer: Layer_100_model.10
+  Shape: torch.Size([1, 256, 40, 38])
+  Channels: 256, Size: 40x38
+
+Layer: Layer_101_model.11
+  Shape: torch.Size([1, 384, 40, 38])
+  Channels: 384, Size: 40x38
+
+Layer: Layer_104_model.12.cv1.conv
+  Shape: torch.Size([1, 128, 40, 38])
+  Channels: 128, Size: 40x38
+
+Layer: Layer_112_model.12.m.0.cv1.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_115_model.12.m.0.cv2.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_107_model.12.cv2.conv
+  Shape: torch.Size([1, 128, 40, 38])
+  Channels: 128, Size: 40x38
+
+Layer: Layer_117_model.13
+  Shape: torch.Size([1, 128, 80, 76])
+  Channels: 128, Size: 80x76
+
+Layer: Layer_118_model.14
+  Shape: torch.Size([1, 192, 80, 76])
+  Channels: 192, Size: 80x76
+
+Layer: Layer_121_model.15.cv1.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_129_model.15.m.0.cv1.conv
+  Shape: torch.Size([1, 32, 80, 76])
+  Channels: 32, Size: 80x76
+
+Layer: Layer_132_model.15.m.0.cv2.conv
+  Shape: torch.Size([1, 32, 80, 76])
+  Channels: 32, Size: 80x76
+
+Layer: Layer_124_model.15.cv2.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_135_model.16.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_137_model.17
+  Shape: torch.Size([1, 192, 40, 38])
+  Channels: 192, Size: 40x38
+
+Layer: Layer_140_model.18.cv1.conv
+  Shape: torch.Size([1, 128, 40, 38])
+  Channels: 128, Size: 40x38
+
+Layer: Layer_148_model.18.m.0.cv1.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_151_model.18.m.0.cv2.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_143_model.18.cv2.conv
+  Shape: torch.Size([1, 128, 40, 38])
+  Channels: 128, Size: 40x38
+
+Layer: Layer_154_model.19.conv
+  Shape: torch.Size([1, 128, 20, 19])
+  Channels: 128, Size: 20x19
+
+Layer: Layer_156_model.20
+  Shape: torch.Size([1, 384, 20, 19])
+  Channels: 384, Size: 20x19
+
+Layer: Layer_159_model.21.cv1.conv
+  Shape: torch.Size([1, 256, 20, 19])
+  Channels: 256, Size: 20x19
+
+Layer: Layer_167_model.21.m.0.cv1.conv
+  Shape: torch.Size([1, 128, 20, 19])
+  Channels: 128, Size: 20x19
+
+Layer: Layer_170_model.21.m.0.cv2.conv
+  Shape: torch.Size([1, 128, 20, 19])
+  Channels: 128, Size: 20x19
+
+Layer: Layer_162_model.21.cv2.conv
+  Shape: torch.Size([1, 256, 20, 19])
+  Channels: 256, Size: 20x19
+
+Layer: Layer_176_model.22.cv2.0.0.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_179_model.22.cv2.0.1.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_181_model.22.cv2.0.2
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_201_model.22.cv3.0.0.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_204_model.22.cv3.0.1.conv
+  Shape: torch.Size([1, 64, 80, 76])
+  Channels: 64, Size: 80x76
+
+Layer: Layer_206_model.22.cv3.0.2
+  Shape: torch.Size([1, 3, 80, 76])
+  Channels: 3, Size: 80x76
+
+Layer: Layer_184_model.22.cv2.1.0.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_187_model.22.cv2.1.1.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_189_model.22.cv2.1.2
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_209_model.22.cv3.1.0.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_212_model.22.cv3.1.1.conv
+  Shape: torch.Size([1, 64, 40, 38])
+  Channels: 64, Size: 40x38
+
+Layer: Layer_214_model.22.cv3.1.2
+  Shape: torch.Size([1, 3, 40, 38])
+  Channels: 3, Size: 40x38
+
+Layer: Layer_192_model.22.cv2.2.0.conv
+  Shape: torch.Size([1, 64, 20, 19])
+  Channels: 64, Size: 20x19
+
+Layer: Layer_195_model.22.cv2.2.1.conv
+  Shape: torch.Size([1, 64, 20, 19])
+  Channels: 64, Size: 20x19
+
+Layer: Layer_197_model.22.cv2.2.2
+  Shape: torch.Size([1, 64, 20, 19])
+  Channels: 64, Size: 20x19
+
+Layer: Layer_217_model.22.cv3.2.0.conv
+  Shape: torch.Size([1, 64, 20, 19])
+  Channels: 64, Size: 20x19
+
+Layer: Layer_220_model.22.cv3.2.1.conv
+  Shape: torch.Size([1, 64, 20, 19])
+  Channels: 64, Size: 20x19
+
+Layer: Layer_222_model.22.cv3.2.2
+  Shape: torch.Size([1, 3, 20, 19])
+  Channels: 3, Size: 20x19
+
+Layer: Layer_224_model.22.dfl.conv
+  Shape: torch.Size([1, 1, 4, 7980])
+  Channels: 1, Size: 4x7980
+
