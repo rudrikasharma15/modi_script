@@ -2,6 +2,8 @@
 """
 YOLOv8 Layer-by-Layer Output Analysis
 Shows what each layer produces and identifies problematic layers
+
+FIXED: Now analyzes ALL test images (not just 20)
 """
 
 import torch
@@ -12,6 +14,7 @@ from pathlib import Path
 import json
 import matplotlib.pyplot as plt
 from collections import defaultdict
+from tqdm import tqdm
 
 class LayerAnalyzer:
     """
@@ -59,9 +62,6 @@ class LayerAnalyzer:
         """
         Run image through model and capture all layer outputs.
         """
-        print(f"\n🔍 Analyzing: {Path(image_path).name}")
-        print("="*80)
-        
         # Clear previous outputs
         self.layer_outputs = {}
         
@@ -176,9 +176,14 @@ class LayerAnalyzer:
         
         return float(inter_area / union_area) if union_area > 0 else 0.0
 
-    def identify_problematic_layers(self, test_images, output_dir='layer_analysis'):
+    def identify_problematic_layers(self, test_images, output_dir='layer_analysis', max_images=None):
         """
         Test on multiple images and identify which layers cause wrong outputs.
+        
+        Args:
+            test_images: List of image paths
+            output_dir: Where to save results
+            max_images: Maximum number of images to analyze (None = all)
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -187,10 +192,18 @@ class LayerAnalyzer:
         print("IDENTIFYING PROBLEMATIC LAYERS")
         print("="*80)
         
+        # Limit images if specified
+        if max_images:
+            test_images = test_images[:max_images]
+            print(f"📊 Analyzing {len(test_images)} images (limited to {max_images})")
+        else:
+            print(f"📊 Analyzing ALL {len(test_images)} images")
+        
         all_results = []
         layer_error_counts = defaultdict(int)
         
-        for img_path in test_images:
+        # Use tqdm for progress bar
+        for img_path in tqdm(test_images, desc="Analyzing images"):
             result = self.analyze_image(img_path)
             all_results.append(result)
             
@@ -280,22 +293,69 @@ class LayerAnalyzer:
 def main():
     import argparse
     
-    parser = argparse.ArgumentParser(description='YOLOv8 Layer-by-Layer Analysis')
+    parser = argparse.ArgumentParser(
+        description='YOLOv8 Layer-by-Layer Analysis',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Analyze ALL test images
+  python analyze_yolo_layers.py --model best.pt --images test_images/
+  
+  # Limit to first 50 images
+  python analyze_yolo_layers.py --model best.pt --images test_images/ --max 50
+  
+  # With visualizations
+  python analyze_yolo_layers.py --model best.pt --images test/ --visualize
+        """
+    )
     parser.add_argument('--model', required=True, help='Path to trained model')
     parser.add_argument('--images', required=True, help='Directory with test images')
     parser.add_argument('--output', default='layer_analysis', help='Output directory')
-    parser.add_argument('--visualize', action='store_true', help='Visualize layer activations')
+    parser.add_argument('--max', type=int, default=None, 
+                       help='Maximum number of images to analyze (default: all)')
+    parser.add_argument('--visualize', action='store_true', 
+                       help='Visualize layer activations for first image')
     args = parser.parse_args()
     
+    # Validate paths
+    if not Path(args.model).exists():
+        print(f"❌ ERROR: Model not found: {args.model}")
+        return
+    
+    image_dir = Path(args.images)
+    if not image_dir.exists():
+        print(f"❌ ERROR: Image directory not found: {args.images}")
+        return
+    
+    # Find all images
+    test_images = list(image_dir.glob('*.jpg')) + list(image_dir.glob('*.png')) + \
+                  list(image_dir.glob('*.jpeg')) + list(image_dir.glob('*.JPG')) + \
+                  list(image_dir.glob('*.PNG'))
+    
+    if not test_images:
+        print(f"❌ ERROR: No images found in: {args.images}")
+        return
+    
+    print(f"\n{'='*80}")
+    print(f"📸 Found {len(test_images)} test images")
+    if args.max:
+        print(f"⚠️  Will analyze first {args.max} images only")
+    else:
+        print(f"✅ Will analyze ALL {len(test_images)} images")
+    print(f"{'='*80}")
+    
+    # Create analyzer and register hooks
     analyzer = LayerAnalyzer(args.model)
     analyzer.register_hooks()
     
-    image_dir = Path(args.images)
-    test_images = list(image_dir.glob('*.jpg')) + list(image_dir.glob('*.png'))
-    print(f"\n📸 Found {len(test_images)} test images")
+    # Run analysis
+    report = analyzer.identify_problematic_layers(
+        test_images, 
+        args.output,
+        max_images=args.max
+    )
     
-    report = analyzer.identify_problematic_layers(test_images[:20], args.output)
-    
+    # Visualize if requested
     if args.visualize and test_images:
         analyzer.visualize_layer_activations(
             str(test_images[0]),
@@ -303,19 +363,21 @@ def main():
             output_dir=Path(args.output) / 'visualizations'
         )
     
+    # Cleanup
     analyzer.remove_hooks()
     
     print("\n" + "="*80)
     print("✅ ANALYSIS COMPLETE")
     print("="*80)
     print(f"\n📋 Summary:")
-    print(f"  Images analyzed: {len(test_images[:20])}")
+    print(f"  Images analyzed: {report['total_images']}")
     print(f"  Total layers: {len(analyzer.layer_outputs)}")
     print(f"  Problematic layers: {len(report['problematic_layers'])}")
     print(f"\n📁 Results saved to: {args.output}")
+    print(f"\n🔍 Next step: Run analysis on this JSON:")
+    print(f"  python analyze_layers.py")
     print("="*80)
 
 
 if __name__ == '__main__':
     main()
-F
