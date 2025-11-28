@@ -379,7 +379,8 @@ Devanagari matra combinations."
 """
     
     # Save report
-    with open(f'{output_dir}/LAYER_ANALYSIS_REPORT.txt', 'w') as f:
+    with open("layer_analysis/report.txt", "w", encoding="utf-8") as f:
+
         f.write(report)
     
     print(report)
@@ -393,8 +394,9 @@ def save_csv_results(df, output_dir='layer_analysis'):
 def main():
     # Load data
     print("Loading layer analysis data...")
-    with open('layer_analysis_report.json', 'r') as f:
-        data = json.load(f)
+    with open(r"C:\Users\admin\Desktop\modi script\modi_script\layer_analysis_report.json", "r", encoding="utf-8") as f:
+      data = json.load(f)
+
     
     print(f"Total images: {data['total_images']}")
     
