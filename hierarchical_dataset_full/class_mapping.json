@@ -1,0 +1,1378 @@
+{
+  "100 TRAHA": {
+    "class": 0,
+    "name": "traha"
+  },
+  "101 TTA-tarbuj": {
+    "class": 1,
+    "name": "tta"
+  },
+  "102 TTAA": {
+    "class": 2,
+    "name": "ttaa"
+  },
+  "103 TTI": {
+    "class": 3,
+    "name": "tti"
+  },
+  "104 TTU": {
+    "class": 4,
+    "name": "ttu"
+  },
+  "105 TTE": {
+    "class": 5,
+    "name": "tte"
+  },
+  "106 TTAI": {
+    "class": 6,
+    "name": "ttai"
+  },
+  "107 TTO": {
+    "class": 7,
+    "name": "tto"
+  },
+  "108 TTAO": {
+    "class": 8,
+    "name": "ttao"
+  },
+  "109 TTAM": {
+    "class": 9,
+    "name": "ttam"
+  },
+  "11 KA-kadhai": {
+    "class": 10,
+    "name": "ka"
+  },
+  "110 TTAHA": {
+    "class": 11,
+    "name": "ttaha"
+  },
+  "12 KAA-kaku": {
+    "class": 12,
+    "name": "kaa"
+  },
+  "13 KI-kiran": {
+    "class": 13,
+    "name": "ki"
+  },
+  "14 KU-kunfu": {
+    "class": 14,
+    "name": "ku"
+  },
+  "15 KE-kedar": {
+    "class": 15,
+    "name": "ke"
+  },
+  "16 KAI-kailas": {
+    "class": 16,
+    "name": "kai"
+  },
+  "17 KO-komal": {
+    "class": 17,
+    "name": "ko"
+  },
+  "18 KAU-kaul": {
+    "class": 18,
+    "name": "kau"
+  },
+  "19 KAN-kangan": {
+    "class": 19,
+    "name": "kan"
+  },
+  "20 KAHA": {
+    "class": 20,
+    "name": "kaha"
+  },
+  "21 KHA-khadu": {
+    "class": 21,
+    "name": "kha"
+  },
+  "22 KHAA-KHAR": {
+    "class": 22,
+    "name": "khaa"
+  },
+  "221 BA-badak": {
+    "class": 23,
+    "name": "ba"
+  },
+  "222 BAA": {
+    "class": 24,
+    "name": "baa"
+  },
+  "223 BI": {
+    "class": 25,
+    "name": "bi"
+  },
+  "224 BU": {
+    "class": 26,
+    "name": "bu"
+  },
+  "225 BE": {
+    "class": 27,
+    "name": "be"
+  },
+  "226 BAI": {
+    "class": 28,
+    "name": "bai"
+  },
+  "227 BO": {
+    "class": 29,
+    "name": "bo"
+  },
+  "228 BAO": {
+    "class": 30,
+    "name": "bao"
+  },
+  "229 BAM": {
+    "class": 31,
+    "name": "bam"
+  },
+  "23 KHI": {
+    "class": 32,
+    "name": "khi"
+  },
+  "230 BAHA": {
+    "class": 33,
+    "name": "baha"
+  },
+  "24 KHU": {
+    "class": 34,
+    "name": "khu"
+  },
+  "25 KHE": {
+    "class": 35,
+    "name": "khe"
+  },
+  "26 KHAI": {
+    "class": 36,
+    "name": "khai"
+  },
+  "27 KHO": {
+    "class": 37,
+    "name": "kho"
+  },
+  "28 KHAU": {
+    "class": 38,
+    "name": "khau"
+  },
+  "29 KHAN": {
+    "class": 39,
+    "name": "khan"
+  },
+  "30 KHAHA": {
+    "class": 40,
+    "name": "khaha"
+  },
+  "31 GA-ganpati": {
+    "class": 41,
+    "name": "ga"
+  },
+  "32 GAA": {
+    "class": 42,
+    "name": "gaa"
+  },
+  "33 GI": {
+    "class": 43,
+    "name": "gi"
+  },
+  "331 ALA-kamal": {
+    "class": 44,
+    "name": "ala"
+  },
+  "332 ALA-kamal": {
+    "class": 45,
+    "name": "ala"
+  },
+  "333 ALI-kamal": {
+    "class": 46,
+    "name": "ali"
+  },
+  "334 ALU-kamal": {
+    "class": 47,
+    "name": "alu"
+  },
+  "335 ALE-kamal": {
+    "class": 48,
+    "name": "ale"
+  },
+  "336 ALAI-kamal": {
+    "class": 49,
+    "name": "alai"
+  },
+  "337 ALO-kamal": {
+    "class": 50,
+    "name": "alo"
+  },
+  "338 ALAO-kamal": {
+    "class": 51,
+    "name": "alao"
+  },
+  "339 ALAM-kamal": {
+    "class": 52,
+    "name": "alam"
+  },
+  "34 GU": {
+    "class": 53,
+    "name": "gu"
+  },
+  "340 ALAHA-kamal": {
+    "class": 54,
+    "name": "alaha"
+  },
+  "341 KSH-kshatriy": {
+    "class": 55,
+    "name": "ksh"
+  },
+  "35 GE": {
+    "class": 56,
+    "name": "ge"
+  },
+  "351 DNYA-dnyaneshwar": {
+    "class": 57,
+    "name": "dnya"
+  },
+  "352 DNYAa": {
+    "class": 58,
+    "name": "dnyaa"
+  },
+  "353 DNYi": {
+    "class": 59,
+    "name": "dnyi"
+  },
+  "354 DNYau": {
+    "class": 60,
+    "name": "dnyau"
+  },
+  "354 DNYu": {
+    "class": 61,
+    "name": "dnyu"
+  },
+  "355 DNYAe": {
+    "class": 62,
+    "name": "dnyae"
+  },
+  "356 DNYAai": {
+    "class": 63,
+    "name": "dnyaai"
+  },
+  "357 DNYo": {
+    "class": 64,
+    "name": "dnyo"
+  },
+  "359 DNYAm": {
+    "class": 65,
+    "name": "dnyam"
+  },
+  "36 GAI": {
+    "class": 66,
+    "name": "gai"
+  },
+  "360 DNYha": {
+    "class": 67,
+    "name": "dnyha"
+  },
+  "37 GO": {
+    "class": 68,
+    "name": "go"
+  },
+  "38 GAU": {
+    "class": 69,
+    "name": "gau"
+  },
+  "39 GAM": {
+    "class": 70,
+    "name": "gam"
+  },
+  "40 GAHA": {
+    "class": 71,
+    "name": "gaha"
+  },
+  "41 GHA-ghar": {
+    "class": 72,
+    "name": "gha"
+  },
+  "42 GHAA": {
+    "class": 73,
+    "name": "ghaa"
+  },
+  "43 GHI": {
+    "class": 74,
+    "name": "ghi"
+  },
+  "44 GHU": {
+    "class": 75,
+    "name": "ghu"
+  },
+  "45 GHE": {
+    "class": 76,
+    "name": "ghe"
+  },
+  "46 GHAI": {
+    "class": 77,
+    "name": "ghai"
+  },
+  "47 GHO": {
+    "class": 78,
+    "name": "gho"
+  },
+  "48 GHAU": {
+    "class": 79,
+    "name": "ghau"
+  },
+  "49 GHAM": {
+    "class": 80,
+    "name": "gham"
+  },
+  "50 GHAHA": {
+    "class": 81,
+    "name": "ghaha"
+  },
+  "51 CHA-chamcha": {
+    "class": 82,
+    "name": "cha"
+  },
+  "52 CHAA": {
+    "class": 83,
+    "name": "chaa"
+  },
+  "53 CHI": {
+    "class": 84,
+    "name": "chi"
+  },
+  "54 CHU": {
+    "class": 85,
+    "name": "chu"
+  },
+  "55 CHE": {
+    "class": 86,
+    "name": "che"
+  },
+  "56 CHAI": {
+    "class": 87,
+    "name": "chai"
+  },
+  "57 CHO": {
+    "class": 88,
+    "name": "cho"
+  },
+  "58 CHAO": {
+    "class": 89,
+    "name": "chao"
+  },
+  "59 CHAM": {
+    "class": 90,
+    "name": "cham"
+  },
+  "60 CHAHA": {
+    "class": 91,
+    "name": "chaha"
+  },
+  "61 CHHA-chhatri": {
+    "class": 92,
+    "name": "chha"
+  },
+  "62 CHHAA": {
+    "class": 93,
+    "name": "chhaa"
+  },
+  "63 CHHI": {
+    "class": 94,
+    "name": "chhi"
+  },
+  "64 CHHU": {
+    "class": 95,
+    "name": "chhu"
+  },
+  "65 CHHE": {
+    "class": 96,
+    "name": "chhe"
+  },
+  "66 CHHAI": {
+    "class": 97,
+    "name": "chhai"
+  },
+  "67 CHHO": {
+    "class": 98,
+    "name": "chho"
+  },
+  "68 CHHAO": {
+    "class": 99,
+    "name": "chhao"
+  },
+  "69 CHHAm": {
+    "class": 100,
+    "name": "chham"
+  },
+  "70 CHHAHA": {
+    "class": 101,
+    "name": "chhaha"
+  },
+  "71 JA-jahaj": {
+    "class": 102,
+    "name": "ja"
+  },
+  "72 JAA": {
+    "class": 103,
+    "name": "jaa"
+  },
+  "73 JI": {
+    "class": 104,
+    "name": "ji"
+  },
+  "74 JU": {
+    "class": 105,
+    "name": "ju"
+  },
+  "75 JE": {
+    "class": 106,
+    "name": "je"
+  },
+  "76 JAI": {
+    "class": 107,
+    "name": "jai"
+  },
+  "77 JO": {
+    "class": 108,
+    "name": "jo"
+  },
+  "78 JAO": {
+    "class": 109,
+    "name": "jao"
+  },
+  "79 JAM": {
+    "class": 110,
+    "name": "jam"
+  },
+  "80 JAHA": {
+    "class": 111,
+    "name": "jaha"
+  },
+  "81 ZA-zabla": {
+    "class": 112,
+    "name": "za"
+  },
+  "82 ZAA": {
+    "class": 113,
+    "name": "zaa"
+  },
+  "83 ZI": {
+    "class": 114,
+    "name": "zi"
+  },
+  "84 ZU": {
+    "class": 115,
+    "name": "zu"
+  },
+  "85 ZE": {
+    "class": 116,
+    "name": "ze"
+  },
+  "86 ZAI": {
+    "class": 117,
+    "name": "zai"
+  },
+  "87 ZO": {
+    "class": 118,
+    "name": "zo"
+  },
+  "88 ZAO": {
+    "class": 119,
+    "name": "zao"
+  },
+  "89 ZAM": {
+    "class": 120,
+    "name": "zam"
+  },
+  "90 ZAHA": {
+    "class": 121,
+    "name": "zaha"
+  },
+  "91 TRA-tantra": {
+    "class": 122,
+    "name": "tra"
+  },
+  "92 TRAA": {
+    "class": 123,
+    "name": "traa"
+  },
+  "93 TRI": {
+    "class": 124,
+    "name": "tri"
+  },
+  "94 TRU": {
+    "class": 125,
+    "name": "tru"
+  },
+  "95 TRE": {
+    "class": 126,
+    "name": "tre"
+  },
+  "96 TRAI": {
+    "class": 127,
+    "name": "trai"
+  },
+  "97 TRO": {
+    "class": 128,
+    "name": "tro"
+  },
+  "98 TRAO": {
+    "class": 129,
+    "name": "trao"
+  },
+  "99 TRAM": {
+    "class": 130,
+    "name": "tram"
+  },
+  "BHA-bhatji": {
+    "class": 131,
+    "name": "bha"
+  },
+  "BHAA": {
+    "class": 132,
+    "name": "bhaa"
+  },
+  "BHAHA": {
+    "class": 133,
+    "name": "bhaha"
+  },
+  "BHAM": {
+    "class": 134,
+    "name": "bham"
+  },
+  "BHAO": {
+    "class": 135,
+    "name": "bhao"
+  },
+  "BHE": {
+    "class": 136,
+    "name": "bhe"
+  },
+  "BHI": {
+    "class": 137,
+    "name": "bhi"
+  },
+  "BHO": {
+    "class": 138,
+    "name": "bho"
+  },
+  "BHU": {
+    "class": 139,
+    "name": "bhu"
+  },
+  "DA-damru": {
+    "class": 140,
+    "name": "da"
+  },
+  "DA-daut": {
+    "class": 141,
+    "name": "da"
+  },
+  "DAA": {
+    "class": 142,
+    "name": "daa"
+  },
+  "DAA-daut": {
+    "class": 143,
+    "name": "daa"
+  },
+  "DAHA": {
+    "class": 144,
+    "name": "daha"
+  },
+  "DAHA-daut": {
+    "class": 145,
+    "name": "daha"
+  },
+  "DAI": {
+    "class": 146,
+    "name": "dai"
+  },
+  "DAI-daut": {
+    "class": 147,
+    "name": "dai"
+  },
+  "DAM": {
+    "class": 148,
+    "name": "dam"
+  },
+  "DAM-daut": {
+    "class": 149,
+    "name": "dam"
+  },
+  "DAO-daut": {
+    "class": 150,
+    "name": "dao"
+  },
+  "DAU": {
+    "class": 151,
+    "name": "dau"
+  },
+  "DE": {
+    "class": 152,
+    "name": "de"
+  },
+  "DE-daut": {
+    "class": 153,
+    "name": "de"
+  },
+  "DHA-dhag": {
+    "class": 154,
+    "name": "dha"
+  },
+  "DHA-dhangar": {
+    "class": 155,
+    "name": "dha"
+  },
+  "DHAA": {
+    "class": 156,
+    "name": "dhaa"
+  },
+  "DHAHA": {
+    "class": 157,
+    "name": "dhaha"
+  },
+  "DHAI": {
+    "class": 158,
+    "name": "dhai"
+  },
+  "DHAM": {
+    "class": 159,
+    "name": "dham"
+  },
+  "DHAO": {
+    "class": 160,
+    "name": "dhao"
+  },
+  "DHE": {
+    "class": 161,
+    "name": "dhe"
+  },
+  "DHHA-dhag": {
+    "class": 162,
+    "name": "dhha"
+  },
+  "DHHAHA-dhag": {
+    "class": 163,
+    "name": "dhhaha"
+  },
+  "DHHAI-dhag": {
+    "class": 164,
+    "name": "dhhai"
+  },
+  "DHHAM-dhag": {
+    "class": 165,
+    "name": "dhham"
+  },
+  "DHHAO-dhag": {
+    "class": 166,
+    "name": "dhhao"
+  },
+  "DHHE-dhag": {
+    "class": 167,
+    "name": "dhhe"
+  },
+  "DHHI-dhag": {
+    "class": 168,
+    "name": "dhhi"
+  },
+  "DHHO-dhag": {
+    "class": 169,
+    "name": "dhho"
+  },
+  "DHHU-dhag": {
+    "class": 170,
+    "name": "dhhu"
+  },
+  "DHI": {
+    "class": 171,
+    "name": "dhi"
+  },
+  "DHO": {
+    "class": 172,
+    "name": "dho"
+  },
+  "DHU": {
+    "class": 173,
+    "name": "dhu"
+  },
+  "DI": {
+    "class": 174,
+    "name": "di"
+  },
+  "DI-daut": {
+    "class": 175,
+    "name": "di"
+  },
+  "DO": {
+    "class": 176,
+    "name": "do"
+  },
+  "DO-daut": {
+    "class": 177,
+    "name": "do"
+  },
+  "DU": {
+    "class": 178,
+    "name": "du"
+  },
+  "DU-daut": {
+    "class": 179,
+    "name": "du"
+  },
+  "HA-hatti": {
+    "class": 180,
+    "name": "ha"
+  },
+  "HAA": {
+    "class": 181,
+    "name": "haa"
+  },
+  "HAHA": {
+    "class": 182,
+    "name": "haha"
+  },
+  "HAI": {
+    "class": 183,
+    "name": "hai"
+  },
+  "HAM": {
+    "class": 184,
+    "name": "ham"
+  },
+  "HAO": {
+    "class": 185,
+    "name": "hao"
+  },
+  "HE": {
+    "class": 186,
+    "name": "he"
+  },
+  "HI": {
+    "class": 187,
+    "name": "hi"
+  },
+  "HO": {
+    "class": 188,
+    "name": "ho"
+  },
+  "HU": {
+    "class": 189,
+    "name": "hu"
+  },
+  "LA-lasun": {
+    "class": 190,
+    "name": "la"
+  },
+  "LAA": {
+    "class": 191,
+    "name": "laa"
+  },
+  "LAHA": {
+    "class": 192,
+    "name": "laha"
+  },
+  "LAI": {
+    "class": 193,
+    "name": "lai"
+  },
+  "LAM": {
+    "class": 194,
+    "name": "lam"
+  },
+  "LAO": {
+    "class": 195,
+    "name": "lao"
+  },
+  "LE": {
+    "class": 196,
+    "name": "le"
+  },
+  "LI": {
+    "class": 197,
+    "name": "li"
+  },
+  "LO": {
+    "class": 198,
+    "name": "lo"
+  },
+  "LU": {
+    "class": 199,
+    "name": "lu"
+  },
+  "MA-magar": {
+    "class": 200,
+    "name": "ma"
+  },
+  "MAA": {
+    "class": 201,
+    "name": "maa"
+  },
+  "MAHA": {
+    "class": 202,
+    "name": "maha"
+  },
+  "MAI": {
+    "class": 203,
+    "name": "mai"
+  },
+  "MAM": {
+    "class": 204,
+    "name": "mam"
+  },
+  "MAO": {
+    "class": 205,
+    "name": "mao"
+  },
+  "ME": {
+    "class": 206,
+    "name": "me"
+  },
+  "MI": {
+    "class": 207,
+    "name": "mi"
+  },
+  "MO": {
+    "class": 208,
+    "name": "mo"
+  },
+  "MU": {
+    "class": 209,
+    "name": "mu"
+  },
+  "NA-banacha": {
+    "class": 210,
+    "name": "na"
+  },
+  "NA-nal": {
+    "class": 211,
+    "name": "na"
+  },
+  "NAA": {
+    "class": 212,
+    "name": "naa"
+  },
+  "NAA-nal": {
+    "class": 213,
+    "name": "naa"
+  },
+  "NAHA": {
+    "class": 214,
+    "name": "naha"
+  },
+  "NAHA-nal": {
+    "class": 215,
+    "name": "naha"
+  },
+  "NAI": {
+    "class": 216,
+    "name": "nai"
+  },
+  "NAI-nal": {
+    "class": 217,
+    "name": "nai"
+  },
+  "NAM": {
+    "class": 218,
+    "name": "nam"
+  },
+  "NAM-nal": {
+    "class": 219,
+    "name": "nam"
+  },
+  "NAO": {
+    "class": 220,
+    "name": "nao"
+  },
+  "NAO-nal": {
+    "class": 221,
+    "name": "nao"
+  },
+  "NE": {
+    "class": 222,
+    "name": "ne"
+  },
+  "NE-nal": {
+    "class": 223,
+    "name": "ne"
+  },
+  "NI": {
+    "class": 224,
+    "name": "ni"
+  },
+  "NI-nal": {
+    "class": 225,
+    "name": "ni"
+  },
+  "NO": {
+    "class": 226,
+    "name": "no"
+  },
+  "NO-nal": {
+    "class": 227,
+    "name": "no"
+  },
+  "NU": {
+    "class": 228,
+    "name": "nu"
+  },
+  "NU-nal": {
+    "class": 229,
+    "name": "nu"
+  },
+  "PA-patang": {
+    "class": 230,
+    "name": "pa"
+  },
+  "PAA": {
+    "class": 231,
+    "name": "paa"
+  },
+  "PAHA": {
+    "class": 232,
+    "name": "paha"
+  },
+  "PAI": {
+    "class": 233,
+    "name": "pai"
+  },
+  "PAM": {
+    "class": 234,
+    "name": "pam"
+  },
+  "PAO": {
+    "class": 235,
+    "name": "pao"
+  },
+  "PE": {
+    "class": 236,
+    "name": "pe"
+  },
+  "PHA-phanas": {
+    "class": 237,
+    "name": "pha"
+  },
+  "PHAA": {
+    "class": 238,
+    "name": "phaa"
+  },
+  "PHAHA": {
+    "class": 239,
+    "name": "phaha"
+  },
+  "PHAI": {
+    "class": 240,
+    "name": "phai"
+  },
+  "PHAM": {
+    "class": 241,
+    "name": "pham"
+  },
+  "PHAO": {
+    "class": 242,
+    "name": "phao"
+  },
+  "PHE": {
+    "class": 243,
+    "name": "phe"
+  },
+  "PHI": {
+    "class": 244,
+    "name": "phi"
+  },
+  "PHO": {
+    "class": 245,
+    "name": "pho"
+  },
+  "PHU": {
+    "class": 246,
+    "name": "phu"
+  },
+  "PI": {
+    "class": 247,
+    "name": "pi"
+  },
+  "PO": {
+    "class": 248,
+    "name": "po"
+  },
+  "PU": {
+    "class": 249,
+    "name": "pu"
+  },
+  "RA-ravi": {
+    "class": 250,
+    "name": "ra"
+  },
+  "RAA": {
+    "class": 251,
+    "name": "raa"
+  },
+  "RAHA": {
+    "class": 252,
+    "name": "raha"
+  },
+  "RAI": {
+    "class": 253,
+    "name": "rai"
+  },
+  "RAM": {
+    "class": 254,
+    "name": "ram"
+  },
+  "RAO": {
+    "class": 255,
+    "name": "rao"
+  },
+  "RE": {
+    "class": 256,
+    "name": "re"
+  },
+  "RI": {
+    "class": 257,
+    "name": "ri"
+  },
+  "RO": {
+    "class": 258,
+    "name": "ro"
+  },
+  "RU": {
+    "class": 259,
+    "name": "ru"
+  },
+  "SA-samas": {
+    "class": 260,
+    "name": "sa"
+  },
+  "SAA": {
+    "class": 261,
+    "name": "saa"
+  },
+  "SAHA": {
+    "class": 262,
+    "name": "saha"
+  },
+  "SAI": {
+    "class": 263,
+    "name": "sai"
+  },
+  "SAM": {
+    "class": 264,
+    "name": "sam"
+  },
+  "SAO": {
+    "class": 265,
+    "name": "sao"
+  },
+  "SE": {
+    "class": 266,
+    "name": "se"
+  },
+  "SHA-shanivar": {
+    "class": 267,
+    "name": "sha"
+  },
+  "SHA-shatkon": {
+    "class": 268,
+    "name": "sha"
+  },
+  "SHAA": {
+    "class": 269,
+    "name": "shaa"
+  },
+  "SHAA-shani": {
+    "class": 270,
+    "name": "shaa"
+  },
+  "SHAHA-shani": {
+    "class": 271,
+    "name": "shaha"
+  },
+  "SHAI-shani": {
+    "class": 272,
+    "name": "shai"
+  },
+  "SHAM-shani": {
+    "class": 273,
+    "name": "sham"
+  },
+  "SHAO-shani": {
+    "class": 274,
+    "name": "shao"
+  },
+  "SHE-shani": {
+    "class": 275,
+    "name": "she"
+  },
+  "SHI": {
+    "class": 276,
+    "name": "shi"
+  },
+  "SHI-shani": {
+    "class": 277,
+    "name": "shi"
+  },
+  "SHO-shani": {
+    "class": 278,
+    "name": "sho"
+  },
+  "SHU": {
+    "class": 279,
+    "name": "shu"
+  },
+  "SHU-shani": {
+    "class": 280,
+    "name": "shu"
+  },
+  "SI": {
+    "class": 281,
+    "name": "si"
+  },
+  "SO": {
+    "class": 282,
+    "name": "so"
+  },
+  "SU": {
+    "class": 283,
+    "name": "su"
+  },
+  "TA-talwar": {
+    "class": 284,
+    "name": "ta"
+  },
+  "TAA-talwar": {
+    "class": 285,
+    "name": "taa"
+  },
+  "TAHA-talwar": {
+    "class": 286,
+    "name": "taha"
+  },
+  "TAI-talwar": {
+    "class": 287,
+    "name": "tai"
+  },
+  "TAM-talwar": {
+    "class": 288,
+    "name": "tam"
+  },
+  "TAO-talwar": {
+    "class": 289,
+    "name": "tao"
+  },
+  "TE--talwar": {
+    "class": 290,
+    "name": "te"
+  },
+  "THA-thava": {
+    "class": 291,
+    "name": "tha"
+  },
+  "THAA": {
+    "class": 292,
+    "name": "thaa"
+  },
+  "THAHA": {
+    "class": 293,
+    "name": "thaha"
+  },
+  "THAI": {
+    "class": 294,
+    "name": "thai"
+  },
+  "THAM": {
+    "class": 295,
+    "name": "tham"
+  },
+  "THAO": {
+    "class": 296,
+    "name": "thao"
+  },
+  "THE": {
+    "class": 297,
+    "name": "the"
+  },
+  "THHA-thhasa": {
+    "class": 298,
+    "name": "thha"
+  },
+  "THHAA": {
+    "class": 299,
+    "name": "thhaa"
+  },
+  "THHAHA": {
+    "class": 300,
+    "name": "thhaha"
+  },
+  "THHAI": {
+    "class": 301,
+    "name": "thhai"
+  },
+  "THHAM": {
+    "class": 302,
+    "name": "thham"
+  },
+  "THHAO": {
+    "class": 303,
+    "name": "thhao"
+  },
+  "THHE": {
+    "class": 304,
+    "name": "thhe"
+  },
+  "THHI": {
+    "class": 305,
+    "name": "thhi"
+  },
+  "THHO": {
+    "class": 306,
+    "name": "thho"
+  },
+  "THHU": {
+    "class": 307,
+    "name": "thhu"
+  },
+  "THI": {
+    "class": 308,
+    "name": "thi"
+  },
+  "THO": {
+    "class": 309,
+    "name": "tho"
+  },
+  "THU": {
+    "class": 310,
+    "name": "thu"
+  },
+  "TI-talwar": {
+    "class": 311,
+    "name": "ti"
+  },
+  "TO-talwar": {
+    "class": 312,
+    "name": "to"
+  },
+  "TU-talwar": {
+    "class": 313,
+    "name": "tu"
+  },
+  "VA-varun": {
+    "class": 314,
+    "name": "va"
+  },
+  "VAA": {
+    "class": 315,
+    "name": "vaa"
+  },
+  "VAHA": {
+    "class": 316,
+    "name": "vaha"
+  },
+  "VAI": {
+    "class": 317,
+    "name": "vai"
+  },
+  "VAM": {
+    "class": 318,
+    "name": "vam"
+  },
+  "VAO": {
+    "class": 319,
+    "name": "vao"
+  },
+  "VE": {
+    "class": 320,
+    "name": "ve"
+  },
+  "VI": {
+    "class": 321,
+    "name": "vi"
+  },
+  "VO": {
+    "class": 322,
+    "name": "vo"
+  },
+  "VU": {
+    "class": 323,
+    "name": "vu"
+  },
+  "YA-yaman": {
+    "class": 324,
+    "name": "ya"
+  },
+  "YAA": {
+    "class": 325,
+    "name": "yaa"
+  },
+  "YAHA": {
+    "class": 326,
+    "name": "yaha"
+  },
+  "YAI": {
+    "class": 327,
+    "name": "yai"
+  },
+  "YAM": {
+    "class": 328,
+    "name": "yam"
+  },
+  "YAO": {
+    "class": 329,
+    "name": "yao"
+  },
+  "YE": {
+    "class": 330,
+    "name": "ye"
+  },
+  "YI": {
+    "class": 331,
+    "name": "yi"
+  },
+  "YO": {
+    "class": 332,
+    "name": "yo"
+  },
+  "YU": {
+    "class": 333,
+    "name": "yu"
+  },
+  "bhai": {
+    "class": 334,
+    "name": "bhai"
+  },
+  "shaha": {
+    "class": 335,
+    "name": "shaha"
+  },
+  "shai": {
+    "class": 336,
+    "name": "shai"
+  },
+  "sham": {
+    "class": 337,
+    "name": "sham"
+  },
+  "shau": {
+    "class": 338,
+    "name": "shau"
+  },
+  "she": {
+    "class": 339,
+    "name": "she"
+  },
+  "sho": {
+    "class": 340,
+    "name": "sho"
+  },
+  "_MATRA_TOP": {
+    "class": 341,
+    "name": "top_matra"
+  },
+  "_MATRA_SIDE": {
+    "class": 342,
+    "name": "side_matra"
+  },
+  "_MATRA_BOTTOM": {
+    "class": 343,
+    "name": "bottom_matra"
+  }
+}

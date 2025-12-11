@@ -1,0 +1,28 @@
+
+╔════════════════════════════════════════════════════════════════════╗
+║                   MODI SCRIPT RECOGNITION COMPARISON               ║
+╠════════════════════════════════════════════════════════════════════╣
+║ Work              Method      Classes  Accuracy   Localization    ║
+╠════════════════════════════════════════════════════════════════════╣
+║ Chandankhede 2023 ResNet50    56       94.55%     ✗               ║
+║ (Classification)  Deep CNN    (combined)                          ║
+╠════════════════════════════════════════════════════════════════════╣
+║ Joseph 2024       LSTM        476      94.67%     ✗               ║
+║ (Transcription)   Seq2Seq     (synthetic)                         ║
+╠════════════════════════════════════════════════════════════════════╣
+║ Sonavane 2024     ResNet101   -        89.10%     ✗               ║
+║ (Classification)  Deep CNN                                         ║
+╠════════════════════════════════════════════════════════════════════╣
+║ OURS (Proposed)   YOLOv8n     344      95.78%     ✓ Bboxes        ║
+║ Hierarchical      Detection   (316+3)   mAP@0.5                   ║
+║ Detection                                                          ║
+╠════════════════════════════════════════════════════════════════════╣
+║ IMPROVEMENT:      -           +288      +1.11%      First          ║
+╠════════════════════════════════════════════════════════════════════╣
+║ KEY ADVANTAGES:                                                    ║
+║ ✓ 5.7× more classes (319 vs 56)                                   ║
+║ ✓ Explicit spatial localization (bounding boxes)                  ║
+║ ✓ Multi-scale detection (3 feature pyramid levels)                ║
+║ ✓ Real handwritten data (13,782 images)                           ║
+║ ✓ Production-ready inference (1ms per image)                      ║
+╚════════════════════════════════════════════════════════════════════╝

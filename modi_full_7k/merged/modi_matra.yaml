@@ -13,9 +13,9 @@ names:
   1: side_matra
   2: bottom_matra
 
-train: /Users/applemaair/Desktop/modi/modi_script/modi_full_7k/merged/images/train
-val:   /Users/applemaair/Desktop/modi/modi_script/modi_full_7k/merged/images/val
-test:  /Users/applemaair/Desktop/modi/modi_script/modi_full_7k/merged/images/test
-# train: C:/Users/admin/Desktop/modi script/modi_script/modi_full_7k/merged/images/train
-# val: C:/Users/admin/Desktop/modi script/modi_script/modi_full_7k/merged/images/val
-# test: C:/Users/admin/Desktop/modi script/modi_script/modi_full_7k/merged/images/test
+# train: /Users/applemaair/Desktop/modi/modi_script/modi_full_7k/merged/images/train
+# val:   /Users/applemaair/Desktop/modi/modi_script/modi_full_7k/merged/images/val
+# test:  /Users/applemaair/Desktop/modi/modi_script/modi_full_7k/merged/images/test
+train: C:/Users/admin/Desktop/modi script/modi_script/modi_full_7k/merged/images/train
+val: C:/Users/admin/Desktop/modi script/modi_script/modi_full_7k/merged/images/val
+test: C:/Users/admin/Desktop/modi script/modi_script/modi_full_7k/merged/images/test

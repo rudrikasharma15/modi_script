@@ -1,0 +1,19 @@
+
+\begin{table}[h]
+\centering
+\caption{Comparison with State-of-the-Art Modi Script Recognition Systems}
+\label{tab:sota_comparison}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Work} & \textbf{Method} & \textbf{Classes} & \textbf{Accuracy} & \textbf{Localization} \\
+\midrule
+Chandankhede 2023 & ResNet50 & 56 & 94.55\% & \xmark \\
+Joseph 2024 & LSTM & 476 & 94.67\% & \xmark \\
+Sonavane 2024 & ResNet101 & - & 89.10\% & \xmark \\
+\textbf{Ours (Proposed)} & \textbf{YOLOv8n} & \textbf{344} & \textbf{95.78\%} & \textbf{\cmark} \\
+\midrule
+\multicolumn{5}{l}{\textit{mAP@0.5 on test set of 2,067 images}} \\
+\multicolumn{5}{l}{\textit{Localization: Explicit bounding box predictions}} \\
+\bottomrule
+\end{tabular}
+\end{table}
